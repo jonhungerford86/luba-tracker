@@ -48,36 +48,38 @@ Runs on the integration VM at 06:00 AEST:
 |---|---|---|
 | Mammotion AU (au.mammotion.com) | Shopify | ✅ Working |
 | Robot Mowers Australia | Shopify | ✅ Working (mower + bundle) |
+| Ople Appliance | Shopify | ✅ Working ($4,399, currently $200 off) |
+| LUBA.com.au (importer, **price floor**) | WooCommerce | ✅ Wayback fallback (live site DNS broken at importer; latest capture 2026-01-18 — floor $3,569 OOS) |
+| Amazon AU | Marketplace | ✅ Working via Playwright (headless Chromium, accessory filter) |
+| eBay AU | Marketplace | ✅ Working via Playwright (warm cookie + .s-card selector + accessory filter) |
+| Mammotion DM AU | Custom | ⛔ Unfixable from any client — their CloudFront edge returns TLS internal_error |
 | Robotic Mowing | Shopify | 🚧 No 3000X listing yet |
-| Ople Appliance | Shopify | 🚧 Handle pending |
-| LUBA.com.au (importer, **price floor**) | WooCommerce | 🚧 DNS/TLS issue from current host — runs from VM |
-| Mammotion DM AU | Custom | 🚧 TLS handshake issue from current host — runs from VM |
-| Amazon AU | Marketplace | 🚧 Anti-bot blocked, needs browser/Keepa |
-| eBay AU | Marketplace | 🚧 403 anti-bot, needs browser session |
 
 ## Pickup checklist
 
-- [x] **Daily cron** — OpenClaw cron `luba-tracker-daily` runs `scripts/daily.ps1` at 06:00 AEST. Failures alert to Telegram "Alerts & System" topic.
+- [x] **Daily cron** — OpenClaw cron `luba-tracker-daily` runs `scripts/daily.ps1` at 06:00 AEST
 - [x] **GitHub repo + Pages** — live at https://jonhungerford86.github.io/luba-tracker/
-- [x] **Telegram alerts** — `scripts/check-alerts.mjs` reads bot token from `~/.openclaw/.env`, posts on rule trip with 24h dedup
-- [x] **Wayback historical seed** — 6 points seeded for mammotion-au (last 12 months, all $4,199)
-- [ ] **Add Ople 3000X handle** once Jon locates the listing on ople.com.au / Kogan / Mattblatt
-- [ ] **Move scrapers to integration VM** — LUBA.com.au DNS unresolvable from this Windows machine, mammotiondm.com.au has TLS handshake errors. VM has clean network egress (already runs g1-g5 + shopify-* successfully).
-- [ ] **Amazon AU via openclaw browser** — anti-bot blocks plain fetch, needs CDP + cookie session
-- [ ] **eBay AU via openclaw browser** — same as Amazon, signed-in session bypasses 403
-- [ ] **Wayback seed for Robot Mowers AU** — currently 0 captures, wait for organic indexing or seed via Wayback save-page-now
-- [ ] **Historical price chart on dashboard** — sparkline per retailer using the `data/snapshots/` history
+- [x] **Telegram alerts** — `scripts/check-alerts.mjs` reads bot token from `~/.openclaw/.env`, posts on rule trip with 24h dedup. Floor-source-aware: won't fire on stale Wayback floor.
+- [x] **6 retailers + floor** — Mammotion AU, Robot Mowers AU mower, Robot Mowers AU bundle, Ople, eBay AU, Amazon AU, plus LUBA.com.au floor via Wayback
+- [x] **Wayback historical seed** — 17 points across 7 retailer/handle combos (Mammotion AU, Ople, LUBA.com.au)
+- [x] **Browser scraper for marketplaces** — `scripts/browser-marketplace.mjs` uses headless Playwright with stealth init + warm-cookie nav for eBay; accessory filter so headline price is the mower not a $35 set of blades
+- [x] **Historical price chart on dashboard** — inline SVG sparklines per retailer, wayback points coloured grey to distinguish from live samples
+- [x] **Floor staleness handling** — dashboard labels floor source (live / Wayback / OOS), alert script doesn't trigger when floor is stale
+- [ ] **Robotic Mowing** — add 3000X handle once they list it (currently older models only)
+- [ ] **Mammotion DM AU** — confirmed unfixable from any client (TLS internal_error from their CloudFront edge). Either contact them to fix their cert config, or accept this retailer is out of scope.
+- [ ] **Wayback seed for Robot Mowers AU** — currently 0 captures, may need Wayback save-page-now to seed
+- [ ] **Bundle accessory subtraction** — alert rule says "subtract included accessories at retail value" before comparing bundle to mower-only; not implemented yet (Garage Kit at $4,560 = $361 over bare mower, which roughly matches the $200 garage + $80 cable + $80 mount retail values, but we should make this explicit)
 
-## DNS / TLS gotchas (this Windows host)
+## Data sources & gotchas
 
-| Domain | Issue | Workaround |
+| Source | How it works | Failure mode |
 |---|---|---|
-| `luba.com.au` / `www.luba.com.au` | Local DNS returns SERVFAIL even via 8.8.8.8/1.1.1.1 | Run scraper from VM (works there) |
-| `www.mammotiondm.com.au` | TLS internal_error from CloudFront edge | Run scraper from VM (works there) |
-| Amazon AU | Anti-bot empty results | Use openclaw browser via CDP |
-| eBay AU | 403 Forbidden | Use openclaw browser via CDP |
-
-The Shopify retailers (`au.mammotion.com`, `robotmowersaustralia.com.au`) work fine from anywhere because Shopify's storefronts have permissive public APIs and consistent edge config.
+| Shopify storefronts | `/products/<handle>.json` for catalog data + `/products/<handle>.js` for live `available` flag | None observed; reliable across all 4 Shopify retailers |
+| LUBA.com.au (WooCommerce) | Live fetch first; fallback to Wayback Machine CDX + parse `data-product_variations` HTML attribute | Live currently 100% broken (importer DNS misconfigured at Cloudflare) |
+| eBay AU | Headless Playwright with warm-cookie nav + `.s-card` selector + price/title accessory filter | Akamai EdgeSuite blocks plain fetch and unwarmed headless sessions |
+| Amazon AU | Headless Playwright + dedupe by ASIN + accessory filter | First-page results vary between fetches; LUBA mower not always shown organically |
+| Mammotion DM AU | Confirmed unfixable | CloudFront returns TLS `internal_error` to every client including Chromium |
+| Wayback historical | CDX API + balanced-brace JSON extraction from `var meta = {...};` (ShopifyAnalytics format, prices in cents) or WooCommerce `data-product_variations` | Some retailers have 0 captures (Robot Mowers AU); some captures are pre-3000X variant (skipped by SKU filter) |
 
 ## Alert rule (from Jon)
 
