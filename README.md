@@ -57,14 +57,27 @@ Runs on the integration VM at 06:00 AEST:
 
 ## Pickup checklist
 
-- [ ] Add Ople 3000X handle once located
-- [ ] Run snapshot from integration VM (luba.com.au + mammotiondm.com.au egress works there)
-- [ ] Daily cron + auto-commit on integration VM
-- [ ] Wayback Machine historical seed (12 months of price history per retailer)
-- [ ] Amazon AU via openclaw browser (CDP) for periodic checks
-- [ ] eBay AU via openclaw browser (signed-in session bypasses 403)
-- [ ] Telegram alert wiring (compare latest.json to history, fire when rule trips)
-- [ ] Historical price chart on dashboard (sparkline per retailer)
+- [x] **Daily cron** — OpenClaw cron `luba-tracker-daily` runs `scripts/daily.ps1` at 06:00 AEST. Failures alert to Telegram "Alerts & System" topic.
+- [x] **GitHub repo + Pages** — live at https://jonhungerford86.github.io/luba-tracker/
+- [x] **Telegram alerts** — `scripts/check-alerts.mjs` reads bot token from `~/.openclaw/.env`, posts on rule trip with 24h dedup
+- [x] **Wayback historical seed** — 6 points seeded for mammotion-au (last 12 months, all $4,199)
+- [ ] **Add Ople 3000X handle** once Jon locates the listing on ople.com.au / Kogan / Mattblatt
+- [ ] **Move scrapers to integration VM** — LUBA.com.au DNS unresolvable from this Windows machine, mammotiondm.com.au has TLS handshake errors. VM has clean network egress (already runs g1-g5 + shopify-* successfully).
+- [ ] **Amazon AU via openclaw browser** — anti-bot blocks plain fetch, needs CDP + cookie session
+- [ ] **eBay AU via openclaw browser** — same as Amazon, signed-in session bypasses 403
+- [ ] **Wayback seed for Robot Mowers AU** — currently 0 captures, wait for organic indexing or seed via Wayback save-page-now
+- [ ] **Historical price chart on dashboard** — sparkline per retailer using the `data/snapshots/` history
+
+## DNS / TLS gotchas (this Windows host)
+
+| Domain | Issue | Workaround |
+|---|---|---|
+| `luba.com.au` / `www.luba.com.au` | Local DNS returns SERVFAIL even via 8.8.8.8/1.1.1.1 | Run scraper from VM (works there) |
+| `www.mammotiondm.com.au` | TLS internal_error from CloudFront edge | Run scraper from VM (works there) |
+| Amazon AU | Anti-bot empty results | Use openclaw browser via CDP |
+| eBay AU | 403 Forbidden | Use openclaw browser via CDP |
+
+The Shopify retailers (`au.mammotion.com`, `robotmowersaustralia.com.au`) work fine from anywhere because Shopify's storefronts have permissive public APIs and consistent edge config.
 
 ## Alert rule (from Jon)
 
