@@ -62,6 +62,8 @@ async function fetchWaybackPage(timestamp, original) {
   return r.text();
 }
 
+const MIN_PLAUSIBLE_PRICE = 500; // anything under is parser garbage for this product
+
 function extractPriceFromShopifyJson(html) {
   // Wayback often captures both .json and .html versions. If we hit the JSON
   // (when target was products/<handle>.json), parse directly.
@@ -71,7 +73,10 @@ function extractPriceFromShopifyJson(html) {
       const variants = data.product.variants || [];
       const want = variants.find((v) => /3000/.test(v.title || '') || /3000/.test(v.option1 || ''))
                 || variants[0];
-      if (want) return { price: parseFloat(want.price), variantTitle: want.title };
+      if (want) {
+        const price = parseFloat(want.price);
+        if (price >= MIN_PLAUSIBLE_PRICE) return { price, variantTitle: want.title };
+      }
     }
   } catch {
     // not JSON; fall through
@@ -79,8 +84,55 @@ function extractPriceFromShopifyJson(html) {
   return null;
 }
 
+function extractShopifyAnalyticsMeta(html) {
+  // Find `var meta = {...};` with balanced braces. JSON itself can contain `}` inside
+  // arrays/strings so a simple non-greedy regex like `\{[\s\S]+?\}` matches too short.
+  const start = html.search(/var\s+meta\s*=\s*\{/);
+  if (start < 0) return null;
+  // Find the position of the opening `{`
+  const eq = html.indexOf('{', start);
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  for (let i = eq; i < Math.min(eq + 200000, html.length); i++) {
+    const c = html[i];
+    if (esc) { esc = false; continue; }
+    if (c === '\\') { esc = true; continue; }
+    if (c === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (c === '{') depth++;
+    else if (c === '}') {
+      depth--;
+      if (depth === 0) {
+        try { return JSON.parse(html.slice(eq, i + 1)); } catch { return null; }
+      }
+    }
+  }
+  return null;
+}
+
 function extractPriceFromHtml(html) {
-  // Try JSON-LD Product schema
+  // Strategy 1: Shopify embeds the entire ShopifyAnalytics product object
+  //   var meta = {"product":{"id":...,"variants":[{"price":419900,...}]}};
+  // Prices are in cents. Most reliable for Shopify wayback captures.
+  const meta = extractShopifyAnalyticsMeta(html);
+  if (meta && meta.product && Array.isArray(meta.product.variants)) {
+    const want = meta.product.variants.find((v) => /3000/.test(JSON.stringify(v))) || meta.product.variants[0];
+    if (want && want.price) {
+      const price = parseFloat(want.price) / 100; // cents
+      if (price >= MIN_PLAUSIBLE_PRICE) return { price, variantTitle: want.public_title || want.name || '(ShopifyAnalytics meta)' };
+    }
+  }
+
+  // Strategy 2: meta property=product:price:amount (often more reliable than JSON-LD)
+  const metaPrice = html.match(/<meta[^>]+property=["']product:price:amount["'][^>]+content=["']([\d.]+)["']/i)
+                 || html.match(/<meta[^>]+property=["']og:price:amount["'][^>]+content=["']([\d.]+)["']/i);
+  if (metaPrice) {
+    const price = parseFloat(metaPrice[1]);
+    if (price >= MIN_PLAUSIBLE_PRICE) return { price, variantTitle: '(meta tag)' };
+  }
+
+  // Strategy 3: JSON-LD Product schema (last resort, often mis-extracts)
   const ldMatches = [...html.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]+?)<\/script>/g)];
   for (const lm of ldMatches) {
     try {
@@ -89,10 +141,10 @@ function extractPriceFromHtml(html) {
       for (const node of candidates) {
         if ((node['@type'] === 'Product' || (Array.isArray(node['@type']) && node['@type'].includes('Product'))) && node.offers) {
           const offers = Array.isArray(node.offers) ? node.offers : [node.offers];
-          // pick the one mentioning 3000 if multiple
           const o = offers.find((x) => /3000/.test(JSON.stringify(x))) || offers[0];
           if (o && (o.price || o.lowPrice)) {
-            return { price: parseFloat(o.price || o.lowPrice), variantTitle: '(JSON-LD)' };
+            const price = parseFloat(o.price || o.lowPrice);
+            if (price >= MIN_PLAUSIBLE_PRICE) return { price, variantTitle: '(JSON-LD)' };
           }
         }
       }
@@ -100,9 +152,6 @@ function extractPriceFromHtml(html) {
       // continue
     }
   }
-  // Generic price meta tag fallback
-  const m = html.match(/<meta[^>]+property=["']product:price:amount["'][^>]+content=["']([\d.]+)["']/);
-  if (m) return { price: parseFloat(m[1]), variantTitle: '(meta tag)' };
   return null;
 }
 

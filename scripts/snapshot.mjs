@@ -280,99 +280,23 @@ async function snapshotHtmlProduct(retailer, productPath, opts = {}) {
   return result;
 }
 
-// ---------- Marketplaces (Amazon AU / eBay AU) ------------------------------
+// ---------- Marketplace merge ----------------------------------------------
 //
-// For marketplaces we capture a search-result snapshot rather than a single
-// canonical product. The output is a min/median/max across listings that
-// match "Mammotion LUBA 2 AWD 3000". Anti-bot is a real issue — these are
-// best-effort and may need a real browser session for reliability.
+// Marketplaces (eBay AU, Amazon AU) require a headless browser to bypass
+// Akamai/anti-bot. They're scraped by `browser-marketplace.mjs` which writes
+// `data/marketplace-snapshot.json`. We merge those results into the main
+// snapshot here. Mammotion DM AU and LUBA.com.au are confirmed unfixable from
+// any client (TLS/DNS broken at the retailer's end — see browser-marketplace.mjs).
 
-async function snapshotEbayAuSearch(retailer) {
-  const url = retailer.searchUrl || `https://www.ebay.com.au/sch/i.html?_nkw=Mammotion+LUBA+2+AWD+3000X&_sop=15`;
-  const result = {
-    id: retailer.id,
-    name: retailer.name,
-    retailerType: 'ebay',
-    url: retailer.url,
-    productUrl: url,
-    currency: 'AUD',
-    fetchedAt: new Date().toISOString(),
-  };
+function loadMarketplaceSnapshot() {
+  const p = path.join(PROJECT_ROOT, 'data', 'marketplace-snapshot.json');
+  if (!fs.existsSync(p)) return [];
   try {
-    const r = await fetchWithTimeout(url, { timeoutMs: 20000 });
-    if (!r.ok) {
-      result.error = `HTTP ${r.status}`;
-      return result;
-    }
-    const html = await r.text();
-    // eBay AU pages embed prices in s-item__price spans. Extract numbers like AU $4,199.00
-    const priceRe = /AU \$([\d,]+(?:\.\d{2})?)/g;
-    const matches = [...html.matchAll(priceRe)].map((m) => parseFloat(m[1].replace(/,/g, '')));
-    const filtered = matches.filter((v) => v >= 1000 && v <= 8000); // sanity
-    if (filtered.length) {
-      filtered.sort((a, b) => a - b);
-      result.title = 'Mammotion LUBA 2 AWD 3000X (eBay AU search)';
-      result.variantTitle = `${filtered.length} listings`;
-      result.price = filtered[0]; // cheapest = headline
-      result.compareAt = null;
-      result.priceMin = filtered[0];
-      result.priceMedian = filtered[Math.floor(filtered.length / 2)];
-      result.priceMax = filtered[filtered.length - 1];
-      result.listings = filtered.length;
-      result.available = true;
-    } else {
-      result.error = 'no listings parsed (anti-bot or no results)';
-    }
-  } catch (e) {
-    result.error = `fetch failed: ${e.message}`;
+    const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+    return Array.isArray(data.results) ? data.results : [];
+  } catch {
+    return [];
   }
-  return result;
-}
-
-async function snapshotAmazonAuSearch(retailer) {
-  const url = `https://www.amazon.com.au/s?k=Mammotion+LUBA+2+AWD+3000X`;
-  const result = {
-    id: retailer.id,
-    name: retailer.name,
-    retailerType: 'amazon',
-    url: retailer.url,
-    productUrl: url,
-    currency: 'AUD',
-    fetchedAt: new Date().toISOString(),
-  };
-  try {
-    const r = await fetchWithTimeout(url, { timeoutMs: 20000 });
-    if (!r.ok) {
-      result.error = `HTTP ${r.status}`;
-      return result;
-    }
-    const html = await r.text();
-    if (html.includes('captcha') || html.includes('Robot Check') || html.length < 5000) {
-      result.error = 'amazon-bot-blocked';
-      return result;
-    }
-    // Amazon embeds whole-price fragments like <span class="a-price-whole">4,199</span>
-    const wholeRe = /<span class="a-price-whole">([\d,]+)<\/span>/g;
-    const matches = [...html.matchAll(wholeRe)].map((m) => parseFloat(m[1].replace(/,/g, '')));
-    const filtered = matches.filter((v) => v >= 1000 && v <= 8000);
-    if (filtered.length) {
-      filtered.sort((a, b) => a - b);
-      result.title = 'Mammotion LUBA 2 AWD 3000X (Amazon AU search)';
-      result.variantTitle = `${filtered.length} listings`;
-      result.price = filtered[0];
-      result.compareAt = null;
-      result.priceMin = filtered[0];
-      result.priceMedian = filtered[Math.floor(filtered.length / 2)];
-      result.priceMax = filtered[filtered.length - 1];
-      result.listings = filtered.length;
-      result.available = true;
-    } else {
-      result.error = 'no prices parsed';
-    }
-  } catch (e) {
-    result.error = `fetch failed: ${e.message}`;
-  }
-  return result;
 }
 
 // ---------- Driver ----------------------------------------------------------
@@ -392,11 +316,6 @@ async function runSnapshot() {
     }
   }
 
-  for (const m of config.marketplaces || []) {
-    if (m.id === 'ebay-au') tasks.push(() => snapshotEbayAuSearch(m));
-    else if (m.id === 'amazon-au') tasks.push(() => snapshotAmazonAuSearch(m));
-  }
-
   const results = [];
   for (const t of tasks) {
     try {
@@ -405,6 +324,10 @@ async function runSnapshot() {
       results.push({ error: `task crashed: ${e.message}` });
     }
   }
+
+  // Merge in the latest marketplace snapshot (browser-driven, separate run)
+  const mp = loadMarketplaceSnapshot();
+  results.push(...mp);
   return results;
 }
 

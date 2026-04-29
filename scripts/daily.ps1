@@ -12,20 +12,26 @@ $logFile = Join-Path $PSScriptRoot 'last-run.log'
 "=== run at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz') ===" | Out-File -FilePath $logFile -Encoding utf8
 
 try {
-    "[1] running snapshot..." | Out-File -FilePath $logFile -Append
+    "[1a] running browser-marketplace (eBay + Amazon)..." | Out-File -FilePath $logFile -Append
+    & node "$PSScriptRoot/browser-marketplace.mjs" 2>&1 | Out-File -FilePath $logFile -Append
+
+    "[1b] running shopify snapshot + merge marketplace..." | Out-File -FilePath $logFile -Append
     & node "$PSScriptRoot/snapshot.mjs" 2>&1 | Out-File -FilePath $logFile -Append
 
-    "[2] checking alerts..." | Out-File -FilePath $logFile -Append
+    "[2] building history.json..." | Out-File -FilePath $logFile -Append
+    & node "$PSScriptRoot/build-history.mjs" 2>&1 | Out-File -FilePath $logFile -Append
+
+    "[3] checking alerts..." | Out-File -FilePath $logFile -Append
     & node "$PSScriptRoot/check-alerts.mjs" 2>&1 | Out-File -FilePath $logFile -Append
 
-    "[3] git status..." | Out-File -FilePath $logFile -Append
+    "[4] git status..." | Out-File -FilePath $logFile -Append
     $status = git status --porcelain data 2>&1
     if (-not $status) {
         "  no data changes - skipping commit" | Out-File -FilePath $logFile -Append
         exit 0
     }
 
-    "[4] committing and pushing..." | Out-File -FilePath $logFile -Append
+    "[5] committing and pushing..." | Out-File -FilePath $logFile -Append
     git add data 2>&1 | Out-File -FilePath $logFile -Append
     if ($LASTEXITCODE -ne 0) { throw 'git add failed' }
     $stamp = Get-Date -Format 'yyyy-MM-dd HH:mm'

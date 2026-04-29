@@ -35,8 +35,9 @@
       "name": "Ople Appliance",
       "url": "https://ople.com.au",
       "shopify": true,
-      "productHandles": [],
-      "notes": "Reseller; same SKU appears on Kogan, Mattblatt, Woolworths Marketplace"
+      "productHandles": ["mammotion-luba-2-awd-3000x-perimeter-wire-free-robot-lawn-mower"],
+      "isAuthorisedDealer": true,
+      "notes": "Reseller; same SKU appears on Kogan, Mattblatt, Woolworths Marketplace (likely same price)"
     },
     {
       "id": "luba-com-au",

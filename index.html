@@ -58,6 +58,15 @@
   td a { color: #1f2937; text-decoration: none; }
   td a:hover { color: #2e7d32; text-decoration: underline; }
 
+  .spark { display: inline-block; vertical-align: middle; }
+  .spark .line { stroke: #2e7d32; stroke-width: 1.6; fill: none; }
+  .spark .area { fill: rgba(46,125,50,0.10); stroke: none; }
+  .spark .dot { fill: #2e7d32; }
+  .spark .dot-wb { fill: #94a3b8; }
+  .spark .baseline { stroke: #cbd5e1; stroke-width: 0.5; stroke-dasharray: 2 2; }
+  .spark-cell { white-space: nowrap; }
+  .spark-meta { font-size: 11px; color: #64748b; margin-left: 6px; }
+
   .alert-card { margin: 14px 0; padding: 14px 18px; background: #ecfdf5; border-left: 4px solid #059669; border-radius: 8px; font-size: 14px; }
   .alert-card.warn { background: #fffbeb; border-left-color: #f59e0b; color: #78350f; }
   .alert-card strong { font-weight: 700; }
@@ -114,6 +123,7 @@
         <th>Variant</th>
         <th>Stock</th>
         <th>Price</th>
+        <th class="hide-mobile">12-month trend</th>
         <th class="hide-mobile">Vs Floor</th>
         <th class="hide-mobile">Tags</th>
       </tr>
@@ -145,12 +155,40 @@ const els = {
 };
 
 let snapshot = null;
+let history = null;
 
-async function loadLatest() {
-  // ?v=<ts> cache-bust
-  const r = await fetch(`./data/latest.json?v=${Date.now()}`);
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+async function loadJson(path) {
+  const r = await fetch(`${path}?v=${Date.now()}`);
+  if (!r.ok) throw new Error(`HTTP ${r.status} on ${path}`);
   return r.json();
+}
+
+function sparklineSvg(points, width = 110, height = 28) {
+  if (!points || points.length === 0) return '<span style="color:#cbd5e1">no history</span>';
+  if (points.length === 1) {
+    return `<svg class="spark" width="${width}" height="${height}"><circle class="dot" cx="${width/2}" cy="${height/2}" r="2.5"/></svg><span class="spark-meta">1 point</span>`;
+  }
+  const prices = points.map(p => p.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const span = Math.max(max - min, 1);
+  const padX = 2, padY = 4;
+  const w = width - padX * 2, h = height - padY * 2;
+  const xs = points.map((_, i) => padX + (points.length === 1 ? w / 2 : (i / (points.length - 1)) * w));
+  const ys = points.map(p => padY + (1 - (p.price - min) / span) * h);
+  const linePath = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
+  const areaPath = `M${xs[0].toFixed(1)},${(padY + h).toFixed(1)} ${xs.map((x, i) => `L${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')} L${xs[xs.length-1].toFixed(1)},${(padY + h).toFixed(1)} Z`;
+  const dots = points.map((p, i) => `<circle class="${p.source === 'wayback' ? 'dot-wb' : 'dot'}" cx="${xs[i].toFixed(1)}" cy="${ys[i].toFixed(1)}" r="2"/>`).join('');
+  const change = prices[prices.length-1] - prices[0];
+  const sign = change > 0 ? '+' : '';
+  const trend = change === 0 ? 'flat' : (change > 0 ? `${sign}$${change.toFixed(0)}` : `\u2212$${Math.abs(change).toFixed(0)}`);
+  return `<svg class="spark" width="${width}" height="${height}"><path class="area" d="${areaPath}"/><path class="line" d="${linePath}"/>${dots}</svg><span class="spark-meta">${points.length} pts · ${trend}</span>`;
+}
+
+function sparkCell(retailerId) {
+  if (!history || !history.series || !history.series[retailerId]) return '<span style="color:#cbd5e1">—</span>';
+  const points = history.series[retailerId];
+  return `<span class="spark-cell" title="${points.length} historical points (range $${Math.min(...points.map(p=>p.price))}–$${Math.max(...points.map(p=>p.price))})">${sparklineSvg(points)}</span>`;
 }
 
 function fmtAud(n) {
@@ -266,6 +304,7 @@ function render() {
       <td>${r.variantTitle || (r.error ? '<em style="color:#999">' + r.error + '</em>' : '—')}</td>
       <td>${stockCell(r)}</td>
       <td class="price">${priceCell(r)}</td>
+      <td class="hide-mobile">${sparkCell(r.id)}</td>
       <td class="delta hide-mobile">${deltaCell(r, floor)}</td>
       <td class="hide-mobile">${tagCell(r)}</td>
     </tr>
@@ -275,14 +314,17 @@ function render() {
 }
 
 async function init() {
-  els.status.textContent = 'Loading latest snapshot...';
+  els.status.textContent = 'Loading latest snapshot + history...';
   try {
-    snapshot = await loadLatest();
+    [snapshot, history] = await Promise.all([
+      loadJson('./data/latest.json'),
+      loadJson('./data/history.json').catch(() => ({ series: {} })),
+    ]);
     renderSummary();
     render();
     els.status.style.display = 'none';
   } catch (e) {
-    els.status.textContent = 'Error loading snapshot: ' + e.message;
+    els.status.textContent = 'Error loading data: ' + e.message;
     els.status.className = 'status error';
   }
 }
