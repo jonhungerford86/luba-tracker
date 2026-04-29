@@ -1,0 +1,33 @@
+{
+  "fetchedAt": "2026-01-06T19:23:44.000Z",
+  "source": "wayback",
+  "summary": {
+    "ok": 1,
+    "failed": 0,
+    "cheapestMower": null,
+    "floor": null,
+    "mowerCount": 1,
+    "bundleCount": 0,
+    "marketplaceCount": 0
+  },
+  "results": [
+    {
+      "id": "mammotion-au:luba-2-awd-robot-lawn-mower",
+      "name": "Mammotion AU (Official)",
+      "retailerType": "shopify",
+      "url": "https://au.mammotion.com",
+      "productUrl": "https://au.mammotion.com/products/luba-2-awd-robot-lawn-mower",
+      "title": "(JSON-LD)",
+      "variantTitle": "(JSON-LD)",
+      "price": 4199,
+      "compareAt": null,
+      "currency": "AUD",
+      "available": null,
+      "isOfficial": true,
+      "isAuthorisedDealer": false,
+      "isBundle": false,
+      "fetchedAt": "2026-01-06T19:23:44.000Z",
+      "source": "wayback"
+    }
+  ]
+}
