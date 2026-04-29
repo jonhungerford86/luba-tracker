@@ -240,10 +240,15 @@ function priceCell(r) {
 
 function renderSummary() {
   const ok = snapshot.results.filter(r => !r.error && r.price);
-  const floor = ok.find(r => r.isFloorReference)?.price ?? null;
+  const floorRetailer = ok.find(r => r.isFloorReference);
+  const floor = floorRetailer?.price ?? null;
+  const floorIsLive = floorRetailer && floorRetailer.source !== 'wayback-fallback' && floorRetailer.available !== false;
   const mowers = ok.filter(r => !r.isBundle && r.retailerType !== 'amazon' && r.retailerType !== 'ebay' && !r.isFloorReference);
   const cheapest = mowers.length ? mowers.reduce((a, b) => (a.price < b.price ? a : b)) : null;
   const failed = snapshot.results.filter(r => r.error).length;
+
+  const floorLabel = floorIsLive ? 'LUBA.com.au floor (live)' : 'LUBA.com.au floor (stale)';
+  const floorBadge = floorIsLive ? '' : `<small style="color:#b45309;">${floorRetailer?.source === 'wayback-fallback' ? `Wayback ${floorRetailer.waybackTimestamp?.slice(0,8)}` : 'OOS'}</small>`;
 
   els.summary.innerHTML = `
     <div class="card cheapest">
@@ -251,8 +256,8 @@ function renderSummary() {
       <div class="value">${cheapest ? fmtAud(cheapest.price) : '—'}<br><small>${cheapest ? cheapest.name : ''}</small></div>
     </div>
     <div class="card floor">
-      <div class="label">LUBA.com.au floor</div>
-      <div class="value">${floor != null ? fmtAud(floor) : '<small>not yet captured</small>'}</div>
+      <div class="label">${floorLabel}</div>
+      <div class="value">${floor != null ? fmtAud(floor) : '<small>not yet captured</small>'}<br>${floorBadge}</div>
     </div>
     <div class="card">
       <div class="label">Retailers tracked</div>
@@ -264,12 +269,15 @@ function renderSummary() {
     </div>
   `;
 
-  // Alert: cheapest is below floor or 10% below historical best (historical TBD — for now just floor)
-  if (cheapest && floor != null && cheapest.price < floor) {
+  // Alert: only fire "below floor" when the floor is LIVE and IN STOCK. Wayback/OOS floors
+  // are informational only — historical sale prices aren't a current deal trigger.
+  if (cheapest && floor != null && floorIsLive && cheapest.price < floor) {
     const saving = floor - cheapest.price;
     els.alertBox.innerHTML = `<div class="alert-card"><strong>🚨 Below floor!</strong> ${cheapest.name} is ${fmtAud(saving)} cheaper than LUBA.com.au.</div>`;
-  } else if (cheapest && floor != null) {
+  } else if (cheapest && floor != null && floorIsLive) {
     els.alertBox.innerHTML = `<div class="alert-card warn">Cheapest mower is ${fmtAud(cheapest.price - floor)} above the LUBA.com.au floor. Wait for a real deal.</div>`;
+  } else if (floorRetailer?.source === 'wayback-fallback') {
+    els.alertBox.innerHTML = `<div class="alert-card warn">LUBA.com.au is currently DNS-broken at the importer. Floor shown above is the latest Wayback Machine capture and may be out of date. Alerts paused for the floor rule.</div>`;
   } else {
     els.alertBox.innerHTML = '';
   }

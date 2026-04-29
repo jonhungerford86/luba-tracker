@@ -71,7 +71,12 @@ function computeHistoricalBest(history, retailerKey) {
 
 function evaluateAlerts(latest, history) {
   const triggered = [];
-  const floor = (latest.results || []).find((r) => r.isFloorReference && !r.error)?.price ?? null;
+  const floorRetailer = (latest.results || []).find((r) => r.isFloorReference && !r.error);
+  // Only trust the floor for alerts when it's both LIVE (not wayback fallback)
+  // and IN STOCK. Stale or OOS floor is informational only.
+  const floorAuthoritative = floorRetailer && floorRetailer.source !== 'wayback-fallback' && floorRetailer.available !== false;
+  const floor = floorAuthoritative ? floorRetailer.price : null;
+  const floorInformational = floorRetailer?.price ?? null;
 
   for (const r of latest.results || []) {
     if (r.error || r.price == null) continue;
@@ -81,7 +86,7 @@ function evaluateAlerts(latest, history) {
 
     const key = r.id;
 
-    // Rule (b): below LUBA.com.au floor
+    // Rule (b): below LUBA.com.au floor (only when authoritative)
     if (floor != null && r.price < floor) {
       const saving = floor - r.price;
       const pct = (saving / floor) * 100;
@@ -119,7 +124,7 @@ function evaluateAlerts(latest, history) {
       }
     }
   }
-  return { triggered, floor };
+  return { triggered, floor, floorInformational, floorAuthoritative: !!floorAuthoritative };
 }
 
 function loadAlertState() {
@@ -205,10 +210,11 @@ const history = loadHistory();
 
 console.log(`Snapshot at ${latest.fetchedAt} — ${history.length} historical snapshots`);
 
-const { triggered, floor } = evaluateAlerts(latest, history);
+const { triggered, floor, floorInformational, floorAuthoritative } = evaluateAlerts(latest, history);
 
 if (!triggered.length && !FORCE) {
-  console.log(`No alerts. (floor=${fmtAud(floor)}, latest cheapest=${fmtAud(latest.summary?.cheapestMower?.price)})`);
+  const floorMsg = floorAuthoritative ? `floor=${fmtAud(floor)}` : `floor=stale/OOS (${fmtAud(floorInformational)})`;
+  console.log(`No alerts. (${floorMsg}, latest cheapest=${fmtAud(latest.summary?.cheapestMower?.price)})`);
   process.exit(0);
 }
 

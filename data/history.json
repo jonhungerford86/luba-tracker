@@ -1,6 +1,6 @@
 {
-  "builtAt": "2026-04-29T11:57:32.640Z",
-  "retailerCount": 6,
+  "builtAt": "2026-04-29T12:06:07.287Z",
+  "retailerCount": 7,
   "series": {
     "mammotion-au:luba-2-awd-robot-lawn-mower": [
       {
@@ -56,6 +56,44 @@
         "source": "live",
         "name": "Mammotion AU (Official)",
         "productUrl": "https://au.mammotion.com/products/luba-2-awd-robot-lawn-mower"
+      }
+    ],
+    "luba-com-au:/product/product-luba2-awd/": [
+      {
+        "date": "2025-07-16",
+        "price": 3569,
+        "compareAt": 4769,
+        "available": true,
+        "source": "wayback",
+        "name": "LUBA.com.au (Exclusive Importer — PRICE FLOOR)",
+        "productUrl": "https://luba.com.au/product/product-luba2-awd/"
+      },
+      {
+        "date": "2025-10-16",
+        "price": 3569,
+        "compareAt": 4769,
+        "available": true,
+        "source": "wayback",
+        "name": "LUBA.com.au (Exclusive Importer — PRICE FLOOR)",
+        "productUrl": "https://luba.com.au/product/product-luba2-awd/"
+      },
+      {
+        "date": "2026-01-18",
+        "price": 3569,
+        "compareAt": 4769,
+        "available": false,
+        "source": "wayback",
+        "name": "LUBA.com.au (Exclusive Importer — PRICE FLOOR)",
+        "productUrl": "https://luba.com.au/product/product-luba2-awd/"
+      },
+      {
+        "date": "2026-04-29",
+        "price": 3569,
+        "compareAt": 4769,
+        "available": false,
+        "source": "live",
+        "name": "LUBA.com.au (Exclusive Importer — PRICE FLOOR)",
+        "productUrl": "https://luba.com.au/product/product-luba2-awd/"
       }
     ],
     "ople:mammotion-luba-2-awd-3000x-perimeter-wire-free-robot-lawn-mower": [

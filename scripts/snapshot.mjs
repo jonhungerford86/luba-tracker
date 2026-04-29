@@ -136,9 +136,53 @@ async function snapshotShopifyProduct(retailer, handle) {
 // ---------- WooCommerce (LUBA.com.au) --------------------------------------
 //
 // LUBA.com.au is a WooCommerce store. The product variations are exposed via
-//   POST /?wc-ajax=get_variation
-// or as an inline data-product_variations JSON blob on the product page.
-// We try the inline blob first (no JS execution required).
+// the inline `data-product_variations` HTML attribute (HTML-entity encoded).
+//
+// Live site fetch is currently impossible (the importer's Cloudflare-hosted DNS
+// returns REFUSED on www.luba.com.au and luba.com.au — a problem at their end,
+// confirmed across all DNS resolvers and reachable from search-engine cache only).
+//
+// As a fallback we read the most recent Wayback Machine capture so we always
+// have *some* importer floor. The result is marked `source: 'wayback-fallback'`
+// and the dashboard makes that visible.
+
+function extractWooVariation3000(html) {
+  const start = html.indexOf('data-product_variations=');
+  if (start < 0) return null;
+  const quoteChar = html[start + 'data-product_variations='.length];
+  if (quoteChar !== '"' && quoteChar !== "'") return null;
+  const valueStart = start + 'data-product_variations='.length + 1;
+  const valueEnd = html.indexOf(quoteChar, valueStart);
+  if (valueEnd < 0) return null;
+  const decoded = html.slice(valueStart, valueEnd)
+    .replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#039;/g, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+  let variations;
+  try { variations = JSON.parse(decoded); } catch { return null; }
+  if (!Array.isArray(variations)) return null;
+  const v3000 = variations.find((x) => {
+    const attrs = Object.values(x.attributes || {}).map((s) => String(s).toLowerCase());
+    return attrs.some((a) => /\b3000\b/.test(a));
+  });
+  return { v3000, variations };
+}
+
+async function fetchWaybackFallback(productUrl) {
+  // Find latest 200 capture in the last 12 months
+  const now = new Date();
+  const ago = new Date(now.getTime() - 365 * 86400 * 1000);
+  const ymd = (d) => d.toISOString().slice(0, 10).replace(/-/g, '');
+  const url = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(productUrl.replace(/^https?:\/\//, ''))}&from=${ymd(ago)}&to=${ymd(now)}&output=json&filter=statuscode:200&limit=10&fl=timestamp,original`;
+  const cdx = await fetch(url).then((r) => r.json()).catch(() => null);
+  if (!cdx || !Array.isArray(cdx) || cdx.length < 2) return null;
+  // Last row = newest because CDX returns chronological
+  const [timestamp, original] = cdx[cdx.length - 1];
+  const wb = `https://web.archive.org/web/${timestamp}id_/${original}`;
+  const r = await fetch(wb, { headers: { 'User-Agent': UA } });
+  if (!r.ok) return null;
+  const html = await r.text();
+  return { html, timestamp, original };
+}
 
 async function snapshotWooProduct(retailer, productPath) {
   const productUrl = `${retailer.url}${productPath}`;
@@ -154,76 +198,64 @@ async function snapshotWooProduct(retailer, productPath) {
     currency: 'AUD',
     fetchedAt: new Date().toISOString(),
   };
+  // Try live first
   try {
     const r = await fetchWithTimeout(productUrl, { timeoutMs: 20000 });
-    if (!r.ok) {
-      result.error = `HTTP ${r.status}`;
-      return result;
-    }
-    const html = await r.text();
-    // Strategy 1: data-product_variations attribute
-    const m = html.match(/data-product_variations\s*=\s*(?:'|&quot;|")([\s\S]+?)(?:'|&quot;|")\s+/);
-    let variations = null;
-    if (m) {
-      try {
-        const decoded = m[1].replace(/&quot;/g, '"');
-        variations = JSON.parse(decoded);
-      } catch {
-        // fall through
-      }
-    }
-    if (variations && Array.isArray(variations)) {
-      // Find the 3000 variant
-      const v = variations.find((x) => {
-        const attrs = Object.values(x.attributes || {}).map((s) => String(s).toLowerCase());
-        return attrs.some((a) => a.includes('3000'));
-      });
-      if (v) {
+    if (r.ok) {
+      const html = await r.text();
+      const ex = extractWooVariation3000(html);
+      if (ex && ex.v3000) {
+        const v = ex.v3000;
         result.title = v.sku || 'LUBA 2 AWD 3000';
         result.variantTitle = Object.values(v.attributes || {}).join(' / ');
         result.variantId = v.variation_id;
         result.sku = v.sku || null;
         result.price = parseFloat(v.display_price);
-        result.compareAt = v.display_regular_price && v.display_regular_price > v.display_price
-          ? parseFloat(v.display_regular_price)
-          : null;
+        result.compareAt = v.display_regular_price && v.display_regular_price > v.display_price ? parseFloat(v.display_regular_price) : null;
         result.available = !!v.is_in_stock;
-        result.allVariations = variations.map((x) => ({
+        result.allVariations = ex.variations.map((x) => ({
           id: x.variation_id,
           attrs: x.attributes,
           price: parseFloat(x.display_price),
           inStock: !!x.is_in_stock,
         }));
+        result.source = 'live';
         return result;
       }
+      result.error = 'live fetch ok but variations not found';
+    } else {
+      result.error = `live HTTP ${r.status}`;
     }
-    // Strategy 2: parse JSON-LD or visible price elements as a coarse fallback
-    const ldMatches = [...html.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]+?)<\/script>/g)];
-    for (const lm of ldMatches) {
-      try {
-        const parsed = JSON.parse(lm[1].trim());
-        const offers = parsed.offers || parsed['@graph']?.find?.((g) => g.offers)?.offers;
-        if (offers) {
-          const arr = Array.isArray(offers) ? offers : [offers];
-          // pick the offer that mentions 3000
-          const o = arr.find((x) => /3000/.test(JSON.stringify(x))) || arr[0];
-          if (o) {
-            result.title = parsed.name || 'LUBA 2 AWD';
-            result.variantTitle = '3000 (from JSON-LD)';
-            result.price = parseFloat(o.price || o.lowPrice);
-            result.compareAt = null;
-            result.available = (o.availability || '').includes('InStock');
-            result.note = 'fallback JSON-LD parse — variation table not found';
-            return result;
-          }
-        }
-      } catch {
-        // continue
-      }
-    }
-    result.error = 'could not extract variations from WooCommerce page';
   } catch (e) {
-    result.error = `fetch failed: ${e.message}`;
+    result.error = `live fetch failed: ${e.message}`;
+  }
+
+  // Fallback: Wayback Machine
+  try {
+    const wb = await fetchWaybackFallback(productUrl);
+    if (!wb) return result;
+    const ex = extractWooVariation3000(wb.html);
+    if (ex && ex.v3000) {
+      const v = ex.v3000;
+      result.error = null;
+      result.title = v.sku || 'LUBA 2 AWD 3000';
+      result.variantTitle = Object.values(v.attributes || {}).join(' / ');
+      result.variantId = v.variation_id;
+      result.price = parseFloat(v.display_price);
+      result.compareAt = v.display_regular_price && v.display_regular_price > v.display_price ? parseFloat(v.display_regular_price) : null;
+      result.available = !!v.is_in_stock;
+      result.source = 'wayback-fallback';
+      result.waybackTimestamp = wb.timestamp;
+      result.note = `Live site unreachable (DNS broken at importer). Showing latest Wayback capture from ${wb.timestamp}.`;
+      result.allVariations = ex.variations.map((x) => ({
+        id: x.variation_id,
+        attrs: x.attributes,
+        price: parseFloat(x.display_price),
+        inStock: !!x.is_in_stock,
+      }));
+    }
+  } catch (e) {
+    result.error = (result.error ? result.error + ' / ' : '') + `wayback fallback failed: ${e.message}`;
   }
   return result;
 }
@@ -334,17 +366,23 @@ async function runSnapshot() {
 function summarise(results) {
   const ok = results.filter((r) => !r.error && r.price);
   const failed = results.filter((r) => r.error);
-  const mowers = ok.filter((r) => !r.isBundle && r.retailerType !== 'amazon' && r.retailerType !== 'ebay');
+  // Mowers = available-from-retailer mowers, excluding bundles, marketplaces, AND the floor reference
+  // (the floor is the importer benchmark, not a buy-here option for the dashboard).
+  const mowers = ok.filter(
+    (r) => !r.isBundle && r.retailerType !== 'amazon' && r.retailerType !== 'ebay' && !r.isFloorReference,
+  );
   const bundles = ok.filter((r) => r.isBundle);
   const marketplaces = ok.filter((r) => r.retailerType === 'amazon' || r.retailerType === 'ebay');
-  const floor = ok.find((r) => r.isFloorReference)?.price ?? null;
+  const floorRetailer = ok.find((r) => r.isFloorReference);
+  const floor = floorRetailer?.price ?? null;
+  const floorIsLive = floorRetailer && floorRetailer.source !== 'wayback-fallback' && floorRetailer.available !== false;
 
   let cheapestMower = null;
   if (mowers.length) {
     const sorted = [...mowers].sort((a, b) => a.price - b.price);
     cheapestMower = { name: sorted[0].name, price: sorted[0].price, url: sorted[0].productUrl };
   }
-  return { ok: ok.length, failed: failed.length, cheapestMower, floor, mowerCount: mowers.length, bundleCount: bundles.length, marketplaceCount: marketplaces.length };
+  return { ok: ok.length, failed: failed.length, cheapestMower, floor, floorIsLive, mowerCount: mowers.length, bundleCount: bundles.length, marketplaceCount: marketplaces.length };
 }
 
 function printHuman(results, summary) {

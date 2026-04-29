@@ -155,9 +155,76 @@ function extractPriceFromHtml(html) {
   return null;
 }
 
+function extractWooVariation3000FromHtml(html) {
+  const start = html.indexOf('data-product_variations=');
+  if (start < 0) return null;
+  const quoteChar = html[start + 'data-product_variations='.length];
+  if (quoteChar !== '"' && quoteChar !== "'") return null;
+  const valueStart = start + 'data-product_variations='.length + 1;
+  const valueEnd = html.indexOf(quoteChar, valueStart);
+  if (valueEnd < 0) return null;
+  const decoded = html.slice(valueStart, valueEnd)
+    .replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#039;/g, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+  let variations;
+  try { variations = JSON.parse(decoded); } catch { return null; }
+  if (!Array.isArray(variations)) return null;
+  return variations.find((x) => {
+    const attrs = Object.values(x.attributes || {}).map((s) => String(s).toLowerCase());
+    return attrs.some((a) => /\b3000\b/.test(a));
+  });
+}
+
+async function seedWooRetailer(retailer, productPath) {
+  const target = `${retailer.url}${productPath}`;
+  console.log(`\n=> ${retailer.id}: ${target} (woo)`);
+  const now = new Date();
+  const from = new Date(now.getTime() - MONTHS * 30 * 86400 * 1000);
+  const captures = await cdxList(target, ymd(from), ymd(now));
+  console.log(`   ${captures.length} unique captures in last ${MONTHS} months`);
+  if (!captures.length) return [];
+  const seeded = [];
+  for (const [timestamp, original] of captures) {
+    const wbDate = new Date(`${timestamp.slice(0,4)}-${timestamp.slice(4,6)}-${timestamp.slice(6,8)}T${timestamp.slice(8,10)}:${timestamp.slice(10,12)}:${timestamp.slice(12,14)}Z`);
+    const html = await fetchWaybackPage(timestamp, original).catch(() => null);
+    if (!html) { console.log(`   [no-html] ${timestamp}`); continue; }
+    const v = extractWooVariation3000FromHtml(html);
+    if (!v || !v.display_price) { console.log(`   [no-3000-variant] ${timestamp}`); continue; }
+    const price = parseFloat(v.display_price);
+    if (price < MIN_PLAUSIBLE_PRICE) { console.log(`   [implausible $${price}] ${timestamp}`); continue; }
+    seeded.push({
+      timestamp,
+      fetchedAt: wbDate.toISOString(),
+      retailer,
+      handle: productPath,
+      target,
+      result: {
+        id: `${retailer.id}:${productPath}`,
+        name: retailer.name,
+        retailerType: 'woo',
+        url: retailer.url,
+        productUrl: target,
+        title: v.sku || 'LUBA 2 AWD 3000',
+        variantTitle: Object.values(v.attributes || {}).join(' / '),
+        price,
+        compareAt: v.display_regular_price && v.display_regular_price > v.display_price ? parseFloat(v.display_regular_price) : null,
+        currency: 'AUD',
+        available: !!v.is_in_stock,
+        isFloorReference: !!retailer.isFloorReference,
+        isBundle: false,
+        fetchedAt: wbDate.toISOString(),
+        source: 'wayback',
+      },
+    });
+    console.log(`   [ok] ${wbDate.toISOString().slice(0,10)} -> $${price} (${v.is_in_stock ? 'in stock' : 'OOS'})`);
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  return seeded;
+}
+
 async function seedRetailer(retailer, handle) {
   if (!retailer.shopify) {
-    console.log(`  [skip] ${retailer.id} not Shopify-based, skipping wayback seed`);
+    console.log(`  [skip] ${retailer.id} not Shopify-based, skipping shopify wayback seed`);
     return [];
   }
   const target = `${retailer.url}/products/${handle}`;
@@ -224,15 +291,22 @@ async function main() {
     if (!r.shopify) continue;
     for (const h of r.productHandles || []) tasks.push({ retailer: r, handle: h });
   }
-  if (!tasks.length) {
-    console.log('No Shopify retailer handles to seed.');
-    return;
-  }
-
   const allSeeded = [];
   for (const t of tasks) {
     const seeded = await seedRetailer(t.retailer, t.handle);
     allSeeded.push(...seeded);
+  }
+  // Also seed WooCommerce / LUBA.com.au (non-Shopify retailers configured by id)
+  for (const r of config.retailers || []) {
+    if (RETAILER_FILTER && r.id !== RETAILER_FILTER) continue;
+    if (r.id === 'luba-com-au') {
+      const seeded = await seedWooRetailer(r, '/product/product-luba2-awd/');
+      allSeeded.push(...seeded);
+    }
+  }
+  if (!allSeeded.length && !tasks.length) {
+    console.log('No retailers to seed.');
+    return;
   }
   console.log(`\nTotal historical price points: ${allSeeded.length}`);
   if (DRY) {
