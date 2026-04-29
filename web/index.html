@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUBA 2 AWD 3000X — Australian Price Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f7; color: #1d1d1f; line-height: 1.5; }
+  header { background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); color: #fff; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  header h1 { font-size: 24px; font-weight: 700; }
+  header .sub { font-size: 13px; opacity: 0.92; margin-top: 4px; }
+  main { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .summary .card { background: #fff; border: 1px solid #e5e5e7; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .summary .card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #666; font-weight: 600; }
+  .summary .card .value { font-size: 22px; font-weight: 700; color: #1d1d1f; margin-top: 4px; }
+  .summary .card .value small { font-size: 12px; color: #888; font-weight: 400; }
+  .summary .card.floor .value { color: #2e7d32; }
+  .summary .card.cheapest .value { color: #047857; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; padding: 14px 16px; background: #fff; border-radius: 10px; border: 1px solid #e5e5e7; box-shadow: 0 1px 3px rgba(0,0,0,0.04); font-size: 13px; }
+  .controls label { color: #555; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .controls select, .controls input { background: #fff; color: #1d1d1f; border: 1px solid #d2d2d7; padding: 6px 10px; border-radius: 6px; font-size: 13px; }
+  .controls select:focus, .controls input:focus { outline: none; border-color: #2e7d32; box-shadow: 0 0 0 3px rgba(46,125,50,0.15); }
+  .controls .toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+
+  .status { padding: 10px 16px; background: #fff; color: #555; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+  .status.error { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+  .status.warn { background: #fffbeb; color: #92400e; border-color: #fcd34d; }
+
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #e5e5e7; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  thead { background: #fafafa; border-bottom: 2px solid #e5e5e7; }
+  th { text-align: left; padding: 10px 14px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; font-weight: 600; }
+  td { padding: 12px 14px; border-bottom: 1px solid #f0f0f2; font-size: 14px; vertical-align: middle; }
+  tbody tr:hover { background: #f9fafb; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.price { font-size: 17px; font-weight: 700; color: #047857; white-space: nowrap; }
+  td.price .was { font-size: 12px; color: #888; text-decoration: line-through; font-weight: 400; margin-left: 6px; }
+  td.delta { font-weight: 600; white-space: nowrap; }
+  td.delta.below { color: #047857; }
+  td.delta.above { color: #b45309; }
+  td.delta.equal { color: #555; }
+  .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 12px; background: #eff6ff; color: #1e40af; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
+  .tag.bundle { background: #fff7ed; color: #9a3412; }
+  .tag.official { background: #dcfce7; color: #166534; }
+  .tag.dealer { background: #ede9fe; color: #5b21b6; }
+  .tag.floor { background: #cffafe; color: #155e75; }
+  .tag.marketplace { background: #f3f4f6; color: #374151; }
+  .tag.error { background: #fee2e2; color: #991b1b; }
+
+  .stock-yes { color: #047857; font-weight: 600; }
+  .stock-no { color: #b91c1c; font-weight: 600; }
+  .stock-back { color: #b45309; font-weight: 600; }
+  .stock-unknown { color: #999; }
+
+  td a { color: #1f2937; text-decoration: none; }
+  td a:hover { color: #2e7d32; text-decoration: underline; }
+
+  .alert-card { margin: 14px 0; padding: 14px 18px; background: #ecfdf5; border-left: 4px solid #059669; border-radius: 8px; font-size: 14px; }
+  .alert-card.warn { background: #fffbeb; border-left-color: #f59e0b; color: #78350f; }
+  .alert-card strong { font-weight: 700; }
+
+  footer { text-align: center; padding: 24px; color: #888; font-size: 12px; }
+  footer a { color: #2e7d32; text-decoration: none; }
+
+  @media (max-width: 720px) {
+    main { padding: 14px; }
+    .summary { grid-template-columns: 1fr 1fr; }
+    table { font-size: 13px; }
+    td, th { padding: 8px 10px; }
+    .hide-mobile { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌱 LUBA 2 AWD 3000X — AU Price Tracker</h1>
+  <div class="sub">Daily snapshots across all Australian retailers. Floor reference: LUBA.com.au.</div>
+</header>
+<main>
+  <div class="summary" id="summary"></div>
+  <div id="alertBox"></div>
+
+  <div class="controls">
+    <label class="toggle">
+      <input type="checkbox" id="hideErrors" checked>
+      Hide unreachable retailers
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="hideOOS">
+      Hide out of stock
+    </label>
+    <label>
+      Sort:
+      <select id="sort">
+        <option value="price-asc" selected>Price (cheapest first)</option>
+        <option value="price-desc">Price (highest first)</option>
+        <option value="vs-floor">Vs LUBA.com.au floor</option>
+        <option value="name">Retailer A→Z</option>
+      </select>
+    </label>
+    <label class="toggle" style="margin-left:auto;">
+      <span id="lastFetched" style="font-size:12px; color:#888;"></span>
+    </label>
+  </div>
+
+  <div class="status" id="status">Loading...</div>
+  <table id="resultsTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Retailer</th>
+        <th>Variant</th>
+        <th>Stock</th>
+        <th>Price</th>
+        <th class="hide-mobile">Vs Floor</th>
+        <th class="hide-mobile">Tags</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+</main>
+<footer>
+  <div>Tracking <strong>LUBA 2 AWD 3000X</strong> across AU retailers. Updated daily at 06:00 AEST.</div>
+  <div style="margin-top:6px;">
+    <a href="https://github.com/jonhungerford86/luba-tracker" target="_blank" rel="noopener">Source on GitHub</a>
+    · Ships to Sunshine Coast 4575 QLD
+  </div>
+</footer>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+
+const els = {
+  summary: $('summary'),
+  alertBox: $('alertBox'),
+  rows: $('rows'),
+  table: $('resultsTable'),
+  status: $('status'),
+  hideErrors: $('hideErrors'),
+  hideOOS: $('hideOOS'),
+  sort: $('sort'),
+  lastFetched: $('lastFetched'),
+};
+
+let snapshot = null;
+
+async function loadLatest() {
+  // ?v=<ts> cache-bust
+  const r = await fetch(`./data/latest.json?v=${Date.now()}`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+function fmtAud(n) {
+  if (n == null) return '—';
+  return '$' + Number(n).toLocaleString('en-AU', { maximumFractionDigits: 0 });
+}
+
+function stockCell(r) {
+  if (r.error) return '<span class="stock-unknown">—</span>';
+  if (r.available === true) return '<span class="stock-yes">In stock</span>';
+  if (r.available === false) {
+    if (r.inventoryPolicy === 'continue') return '<span class="stock-back">Backorder</span>';
+    return '<span class="stock-no">Out of stock</span>';
+  }
+  return '<span class="stock-unknown">Unknown</span>';
+}
+
+function tagCell(r) {
+  const tags = [];
+  if (r.error) tags.push('<span class="tag error">Unreachable</span>');
+  if (r.isOfficial) tags.push('<span class="tag official">Official</span>');
+  if (r.isAuthorisedDealer) tags.push('<span class="tag dealer">Authorised dealer</span>');
+  if (r.isFloorReference) tags.push('<span class="tag floor">Price floor</span>');
+  if (r.isBundle) tags.push('<span class="tag bundle">Bundle</span>');
+  if (r.retailerType === 'amazon' || r.retailerType === 'ebay') tags.push('<span class="tag marketplace">Marketplace</span>');
+  return tags.join(' ') || '—';
+}
+
+function deltaCell(r, floor) {
+  if (r.error || r.price == null) return '<span class="delta equal">—</span>';
+  if (r.isFloorReference) return '<span class="delta equal">— (floor)</span>';
+  if (floor == null) return '<span class="delta equal">no floor</span>';
+  const diff = r.price - floor;
+  const pct = (diff / floor) * 100;
+  let cls = 'equal';
+  if (diff < -1) cls = 'below';
+  else if (diff > 1) cls = 'above';
+  const sign = diff > 0 ? '+' : '';
+  return `<span class="delta ${cls}">${sign}${fmtAud(diff)} (${sign}${pct.toFixed(1)}%)</span>`;
+}
+
+function priceCell(r) {
+  if (r.error) return '<span class="stock-unknown">—</span>';
+  if (r.price == null) return '—';
+  const main = `<span>${fmtAud(r.price)}</span>`;
+  const was = r.compareAt && r.compareAt > r.price ? `<span class="was">was ${fmtAud(r.compareAt)}</span>` : '';
+  return main + was;
+}
+
+function renderSummary() {
+  const ok = snapshot.results.filter(r => !r.error && r.price);
+  const floor = ok.find(r => r.isFloorReference)?.price ?? null;
+  const mowers = ok.filter(r => !r.isBundle && r.retailerType !== 'amazon' && r.retailerType !== 'ebay' && !r.isFloorReference);
+  const cheapest = mowers.length ? mowers.reduce((a, b) => (a.price < b.price ? a : b)) : null;
+  const failed = snapshot.results.filter(r => r.error).length;
+
+  els.summary.innerHTML = `
+    <div class="card cheapest">
+      <div class="label">Cheapest mower</div>
+      <div class="value">${cheapest ? fmtAud(cheapest.price) : '—'}<br><small>${cheapest ? cheapest.name : ''}</small></div>
+    </div>
+    <div class="card floor">
+      <div class="label">LUBA.com.au floor</div>
+      <div class="value">${floor != null ? fmtAud(floor) : '<small>not yet captured</small>'}</div>
+    </div>
+    <div class="card">
+      <div class="label">Retailers tracked</div>
+      <div class="value">${ok.length}<small> of ${snapshot.results.length} (${failed} unreachable)</small></div>
+    </div>
+    <div class="card">
+      <div class="label">Last refresh</div>
+      <div class="value"><small>${new Date(snapshot.fetchedAt).toLocaleString('en-AU', { timeZone: 'Australia/Brisbane' })}</small></div>
+    </div>
+  `;
+
+  // Alert: cheapest is below floor or 10% below historical best (historical TBD — for now just floor)
+  if (cheapest && floor != null && cheapest.price < floor) {
+    const saving = floor - cheapest.price;
+    els.alertBox.innerHTML = `<div class="alert-card"><strong>🚨 Below floor!</strong> ${cheapest.name} is ${fmtAud(saving)} cheaper than LUBA.com.au.</div>`;
+  } else if (cheapest && floor != null) {
+    els.alertBox.innerHTML = `<div class="alert-card warn">Cheapest mower is ${fmtAud(cheapest.price - floor)} above the LUBA.com.au floor. Wait for a real deal.</div>`;
+  } else {
+    els.alertBox.innerHTML = '';
+  }
+}
+
+function render() {
+  if (!snapshot) return;
+  els.lastFetched.textContent = `as of ${new Date(snapshot.fetchedAt).toLocaleString('en-AU', { timeZone: 'Australia/Brisbane' })}`;
+
+  let rows = [...snapshot.results];
+  const floor = rows.find(r => !r.error && r.isFloorReference)?.price ?? null;
+
+  if (els.hideErrors.checked) rows = rows.filter(r => !r.error);
+  if (els.hideOOS.checked) rows = rows.filter(r => r.available !== false || r.inventoryPolicy === 'continue');
+
+  switch (els.sort.value) {
+    case 'price-asc': rows.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity)); break;
+    case 'price-desc': rows.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity)); break;
+    case 'vs-floor':
+      rows.sort((a, b) => {
+        const av = a.price != null && floor != null ? a.price - floor : Infinity;
+        const bv = b.price != null && floor != null ? b.price - floor : Infinity;
+        return av - bv;
+      });
+      break;
+    case 'name': rows.sort((a, b) => (a.name || '').localeCompare(b.name || '')); break;
+  }
+
+  els.rows.innerHTML = rows.map(r => `
+    <tr>
+      <td><a href="${r.productUrl || r.url || '#'}" target="_blank" rel="noopener">${r.name || r.id}</a></td>
+      <td>${r.variantTitle || (r.error ? '<em style="color:#999">' + r.error + '</em>' : '—')}</td>
+      <td>${stockCell(r)}</td>
+      <td class="price">${priceCell(r)}</td>
+      <td class="delta hide-mobile">${deltaCell(r, floor)}</td>
+      <td class="hide-mobile">${tagCell(r)}</td>
+    </tr>
+  `).join('');
+
+  els.table.style.display = '';
+}
+
+async function init() {
+  els.status.textContent = 'Loading latest snapshot...';
+  try {
+    snapshot = await loadLatest();
+    renderSummary();
+    render();
+    els.status.style.display = 'none';
+  } catch (e) {
+    els.status.textContent = 'Error loading snapshot: ' + e.message;
+    els.status.className = 'status error';
+  }
+}
+
+[els.hideErrors, els.hideOOS, els.sort].forEach(el => el.addEventListener('change', render));
+init();
+</script>
+</body>
+</html>

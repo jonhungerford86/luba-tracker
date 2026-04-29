@@ -1,0 +1,84 @@
+{
+  "_comment": "Retailer config for LUBA 2 AWD 3000X tracker. shopify=true means use /products.json API.",
+  "retailers": [
+    {
+      "id": "mammotion-au",
+      "name": "Mammotion AU (Official)",
+      "url": "https://au.mammotion.com",
+      "shopify": true,
+      "productHandles": ["luba-2-awd-robot-lawn-mower"],
+      "shipping": "Free",
+      "isOfficial": true
+    },
+    {
+      "id": "robot-mowers-au",
+      "name": "Robot Mowers Australia",
+      "url": "https://robotmowersaustralia.com.au",
+      "shopify": true,
+      "productHandles": [
+        "mammotion-luba-2-awd-3000x-3000-order-from-rma",
+        "mammotion-luba-2-awd-3000x-garage-mow-kit"
+      ],
+      "isAuthorisedDealer": true,
+      "notes": "Has bundles (Garage & Mow Kit, Ultimate Bundle)"
+    },
+    {
+      "id": "robotic-mowing",
+      "name": "Robotic Mowing",
+      "url": "https://roboticmowing.com.au",
+      "shopify": true,
+      "productHandles": [],
+      "notes": "Currently lists older non-X variants only — keep checking"
+    },
+    {
+      "id": "ople",
+      "name": "Ople Appliance",
+      "url": "https://ople.com.au",
+      "shopify": true,
+      "productHandles": [],
+      "notes": "Reseller; same SKU appears on Kogan, Mattblatt, Woolworths Marketplace"
+    },
+    {
+      "id": "luba-com-au",
+      "name": "LUBA.com.au (Exclusive Importer — PRICE FLOOR)",
+      "url": "https://luba.com.au",
+      "shopify": false,
+      "isFloorReference": true,
+      "notes": "Custom WP/WooCommerce — needs HTML scraper. This is the price floor for alerts."
+    },
+    {
+      "id": "mammotion-dm",
+      "name": "Mammotion DM AU",
+      "url": "https://www.mammotiondm.com.au",
+      "shopify": false,
+      "notes": "Custom site — needs scraper"
+    }
+  ],
+  "marketplaces": [
+    {
+      "id": "amazon-au",
+      "name": "Amazon AU",
+      "url": "https://www.amazon.com.au",
+      "needsBrowser": true,
+      "notes": "Anti-bot, may need Keepa API for history"
+    },
+    {
+      "id": "ebay-au",
+      "name": "eBay AU",
+      "url": "https://www.ebay.com.au",
+      "searchUrl": "https://www.ebay.com.au/sch/i.html?_nkw=Mammotion+LUBA+2+AWD+3000X&_sop=15",
+      "notes": "Aggregator listings, worth periodic check for grey-market deals"
+    }
+  ],
+  "alertRules": {
+    "minDropFromBest": 10,
+    "useFloorReference": "luba-com-au",
+    "telegramTopic": -1003737519088,
+    "telegramThread": 53
+  },
+  "shippingTo": {
+    "postcode": "4575",
+    "state": "QLD",
+    "city": "Sunshine Coast"
+  }
+}
