@@ -142,65 +142,6 @@
       ]
     },
     {
-      "id": "luba-com-au:/product/product-luba2-awd/",
-      "name": "LUBA.com.au (Exclusive Importer — PRICE FLOOR)",
-      "retailerType": "woo",
-      "url": "https://luba.com.au",
-      "productUrl": "https://luba.com.au/product/product-luba2-awd/",
-      "isBundle": false,
-      "isOfficial": false,
-      "isFloorReference": true,
-      "currency": "AUD",
-      "fetchedAt": "2026-04-29T12:10:17.364Z",
-      "error": null,
-      "title": "LUBA 2 AWD 3000",
-      "variantTitle": "3000 (3000㎡)",
-      "variantId": 2286,
-      "price": 3569,
-      "compareAt": 4769,
-      "available": false,
-      "source": "wayback-fallback",
-      "waybackTimestamp": "20260118172157",
-      "note": "Live site unreachable (DNS broken at importer). Showing latest Wayback capture from 20260118172157.",
-      "allVariations": [
-        {
-          "id": 2285,
-          "attrs": {
-            "attribute_model": "1000 (1000㎡)"
-          },
-          "price": 2999,
-          "inStock": false
-        },
-        {
-          "id": 2286,
-          "attrs": {
-            "attribute_model": "3000 (3000㎡)"
-          },
-          "price": 3569,
-          "inStock": false
-        },
-        {
-          "id": 2287,
-          "attrs": {
-            "attribute_model": "10000 (10000㎡)"
-          },
-          "price": 5999,
-          "inStock": true
-        }
-      ]
-    },
-    {
-      "id": "mammotion-dm:/products/luba-2-awd-3000x",
-      "name": "Mammotion DM AU",
-      "retailerType": "html",
-      "url": "https://www.mammotiondm.com.au",
-      "productUrl": "https://www.mammotiondm.com.au/products/luba-2-awd-3000x",
-      "isBundle": false,
-      "currency": "AUD",
-      "fetchedAt": "2026-04-29T12:10:31.311Z",
-      "error": "fetch failed: fetch failed"
-    },
-    {
       "id": "ebay-au",
       "name": "eBay AU",
       "retailerType": "ebay",

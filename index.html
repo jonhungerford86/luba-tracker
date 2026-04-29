@@ -47,6 +47,7 @@
   .tag.official { background: #dcfce7; color: #166534; }
   .tag.dealer { background: #ede9fe; color: #5b21b6; }
   .tag.floor { background: #cffafe; color: #155e75; }
+  .tag.manufacturer { background: #cffafe; color: #155e75; }
   .tag.marketplace { background: #f3f4f6; color: #374151; }
   .tag.error { background: #fee2e2; color: #991b1b; }
 
@@ -124,7 +125,7 @@
         <th>Stock</th>
         <th>Price</th>
         <th class="hide-mobile">12-month trend</th>
-        <th class="hide-mobile">Vs Floor</th>
+        <th class="hide-mobile">Vs Mammotion AU</th>
         <th class="hide-mobile">Tags</th>
       </tr>
     </thead>
@@ -209,20 +210,19 @@ function stockCell(r) {
 function tagCell(r) {
   const tags = [];
   if (r.error) tags.push('<span class="tag error">Unreachable</span>');
-  if (r.isOfficial) tags.push('<span class="tag official">Official</span>');
+  if (r.isOfficial) tags.push('<span class="tag manufacturer">Manufacturer</span>');
   if (r.isAuthorisedDealer) tags.push('<span class="tag dealer">Authorised dealer</span>');
-  if (r.isFloorReference) tags.push('<span class="tag floor">Price floor</span>');
   if (r.isBundle) tags.push('<span class="tag bundle">Bundle</span>');
   if (r.retailerType === 'amazon' || r.retailerType === 'ebay') tags.push('<span class="tag marketplace">Marketplace</span>');
   return tags.join(' ') || '—';
 }
 
-function deltaCell(r, floor) {
+function deltaCell(r, manufacturerPrice) {
   if (r.error || r.price == null) return '<span class="delta equal">—</span>';
-  if (r.isFloorReference) return '<span class="delta equal">— (floor)</span>';
-  if (floor == null) return '<span class="delta equal">no floor</span>';
-  const diff = r.price - floor;
-  const pct = (diff / floor) * 100;
+  if (r.isOfficial) return '<span class="delta equal">— (manufacturer)</span>';
+  if (manufacturerPrice == null) return '<span class="delta equal">no ref</span>';
+  const diff = r.price - manufacturerPrice;
+  const pct = (diff / manufacturerPrice) * 100;
   let cls = 'equal';
   if (diff < -1) cls = 'below';
   else if (diff > 1) cls = 'above';
@@ -240,28 +240,31 @@ function priceCell(r) {
 
 function renderSummary() {
   const ok = snapshot.results.filter(r => !r.error && r.price);
-  const floorRetailer = ok.find(r => r.isFloorReference);
-  const floor = floorRetailer?.price ?? null;
-  const floorIsLive = floorRetailer && floorRetailer.source !== 'wayback-fallback' && floorRetailer.available !== false;
-  const mowers = ok.filter(r => !r.isBundle && r.retailerType !== 'amazon' && r.retailerType !== 'ebay' && !r.isFloorReference);
+  const mowers = ok.filter(r => !r.isBundle && r.retailerType !== 'amazon' && r.retailerType !== 'ebay');
   const cheapest = mowers.length ? mowers.reduce((a, b) => (a.price < b.price ? a : b)) : null;
+  // The manufacturer's own store (Mammotion AU) is the reference price.
+  const manufacturer = ok.find(r => r.isOfficial);
+  const manufacturerPrice = manufacturer?.price ?? null;
   const failed = snapshot.results.filter(r => r.error).length;
 
-  const floorLabel = floorIsLive ? 'LUBA.com.au floor (live)' : 'LUBA.com.au floor (stale)';
-  const floorBadge = floorIsLive ? '' : `<small style="color:#b45309;">${floorRetailer?.source === 'wayback-fallback' ? `Wayback ${floorRetailer.waybackTimestamp?.slice(0,8)}` : 'OOS'}</small>`;
+  // Find biggest discount vs manufacturer
+  let bestSaving = null;
+  if (manufacturerPrice && cheapest && cheapest.price < manufacturerPrice && !cheapest.isOfficial) {
+    bestSaving = { saving: manufacturerPrice - cheapest.price, retailer: cheapest };
+  }
 
   els.summary.innerHTML = `
     <div class="card cheapest">
-      <div class="label">Cheapest mower</div>
+      <div class="label">Cheapest right now</div>
       <div class="value">${cheapest ? fmtAud(cheapest.price) : '—'}<br><small>${cheapest ? cheapest.name : ''}</small></div>
     </div>
     <div class="card floor">
-      <div class="label">${floorLabel}</div>
-      <div class="value">${floor != null ? fmtAud(floor) : '<small>not yet captured</small>'}<br>${floorBadge}</div>
+      <div class="label">Mammotion AU (manufacturer)</div>
+      <div class="value">${manufacturerPrice != null ? fmtAud(manufacturerPrice) : '—'}<br><small>au.mammotion.com</small></div>
     </div>
     <div class="card">
       <div class="label">Retailers tracked</div>
-      <div class="value">${ok.length}<small> of ${snapshot.results.length} (${failed} unreachable)</small></div>
+      <div class="value">${ok.length}<small> of ${snapshot.results.length}${failed ? ` (${failed} unreachable)` : ''}</small></div>
     </div>
     <div class="card">
       <div class="label">Last refresh</div>
@@ -269,15 +272,16 @@ function renderSummary() {
     </div>
   `;
 
-  // Alert: only fire "below floor" when the floor is LIVE and IN STOCK. Wayback/OOS floors
-  // are informational only — historical sale prices aren't a current deal trigger.
-  if (cheapest && floor != null && floorIsLive && cheapest.price < floor) {
-    const saving = floor - cheapest.price;
-    els.alertBox.innerHTML = `<div class="alert-card"><strong>🚨 Below floor!</strong> ${cheapest.name} is ${fmtAud(saving)} cheaper than LUBA.com.au.</div>`;
-  } else if (cheapest && floor != null && floorIsLive) {
-    els.alertBox.innerHTML = `<div class="alert-card warn">Cheapest mower is ${fmtAud(cheapest.price - floor)} above the LUBA.com.au floor. Wait for a real deal.</div>`;
-  } else if (floorRetailer?.source === 'wayback-fallback') {
-    els.alertBox.innerHTML = `<div class="alert-card warn">LUBA.com.au is currently DNS-broken at the importer. Floor shown above is the latest Wayback Machine capture and may be out of date. Alerts paused for the floor rule.</div>`;
+  // Alert: any retailer is cheaper than the manufacturer's official store
+  if (bestSaving) {
+    els.alertBox.innerHTML = `<div class="alert-card"><strong>🚨 Below manufacturer price!</strong> ${bestSaving.retailer.name} is ${fmtAud(bestSaving.saving)} cheaper than Mammotion AU.</div>`;
+  } else if (manufacturerPrice && cheapest) {
+    const diff = cheapest.price - manufacturerPrice;
+    if (diff === 0) {
+      els.alertBox.innerHTML = `<div class="alert-card warn">No retailer is undercutting the manufacturer price right now. Wait for a real deal.</div>`;
+    } else {
+      els.alertBox.innerHTML = `<div class="alert-card warn">Cheapest retailer is ${fmtAud(diff)} ${diff > 0 ? 'above' : 'below'} Mammotion AU.</div>`;
+    }
   } else {
     els.alertBox.innerHTML = '';
   }
@@ -288,7 +292,7 @@ function render() {
   els.lastFetched.textContent = `as of ${new Date(snapshot.fetchedAt).toLocaleString('en-AU', { timeZone: 'Australia/Brisbane' })}`;
 
   let rows = [...snapshot.results];
-  const floor = rows.find(r => !r.error && r.isFloorReference)?.price ?? null;
+  const manufacturerPrice = rows.find(r => !r.error && r.isOfficial)?.price ?? null;
 
   if (els.hideErrors.checked) rows = rows.filter(r => !r.error);
   if (els.hideOOS.checked) rows = rows.filter(r => r.available !== false || r.inventoryPolicy === 'continue');
@@ -298,8 +302,8 @@ function render() {
     case 'price-desc': rows.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity)); break;
     case 'vs-floor':
       rows.sort((a, b) => {
-        const av = a.price != null && floor != null ? a.price - floor : Infinity;
-        const bv = b.price != null && floor != null ? b.price - floor : Infinity;
+        const av = a.price != null && manufacturerPrice != null ? a.price - manufacturerPrice : Infinity;
+        const bv = b.price != null && manufacturerPrice != null ? b.price - manufacturerPrice : Infinity;
         return av - bv;
       });
       break;
@@ -313,7 +317,7 @@ function render() {
       <td>${stockCell(r)}</td>
       <td class="price">${priceCell(r)}</td>
       <td class="hide-mobile">${sparkCell(r.id)}</td>
-      <td class="delta hide-mobile">${deltaCell(r, floor)}</td>
+      <td class="delta hide-mobile">${deltaCell(r, manufacturerPrice)}</td>
       <td class="hide-mobile">${tagCell(r)}</td>
     </tr>
   `).join('');

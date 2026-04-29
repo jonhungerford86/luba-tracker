@@ -345,6 +345,7 @@ async function runSnapshot() {
   const tasks = [];
 
   for (const r of config.retailers || []) {
+    if (r._disabled) continue;
     if (r.shopify && r.productHandles?.length) {
       for (const handle of r.productHandles) {
         tasks.push(() => snapshotShopifyProduct(r, handle));

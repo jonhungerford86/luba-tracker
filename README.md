@@ -1,16 +1,16 @@
 # LUBA 2 AWD 3000X — Australian Price Tracker
 
-Daily snapshots of the Mammotion LUBA 2 AWD 3000X across all known Australian retailers and marketplaces. Live dashboard:
+Daily snapshots of the Mammotion LUBA 2 AWD 3000X across Australian retailers and marketplaces. Live dashboard:
 
 **https://jonhungerford86.github.io/luba-tracker/**
 
 ## What it does
 
 - Snapshots prices and stock status from every AU retailer that sells the LUBA 2 AWD 3000X variant
-- Uses LUBA.com.au (the exclusive AU importer) as the price floor reference
-- Tracks bundles separately so we can subtract included accessories at retail value
+- Uses **Mammotion AU** (au.mammotion.com — the manufacturer's official store) as the reference price
+- Tracks bundles separately
 - Static GitHub Pages dashboard — no backend, just JSON in the repo
-- Telegram alerts (private) when any retailer drops 10%+ below their historical best, OR below the LUBA.com.au floor
+- Telegram alerts (private) when any retailer drops 10%+ below their historical best, OR below the manufacturer's price
 
 ## Layout
 
@@ -46,14 +46,16 @@ Runs on the integration VM at 06:00 AEST:
 
 | Retailer | Type | Status |
 |---|---|---|
-| Mammotion AU (au.mammotion.com) | Shopify | ✅ Working |
-| Robot Mowers Australia | Shopify | ✅ Working (mower + bundle) |
-| Ople Appliance | Shopify | ✅ Working ($4,399, currently $200 off) |
-| LUBA.com.au (importer, **price floor**) | WooCommerce | ✅ Wayback fallback (live site DNS broken at importer; latest capture 2026-01-18 — floor $3,569 OOS) |
+| **Mammotion AU** (au.mammotion.com) | Shopify | ✅ Manufacturer/official store — reference price |
+| Robot Mowers Australia | Shopify | ✅ Working (mower + Garage Kit bundle) |
+| Ople Appliance | Shopify | ✅ Working |
 | Amazon AU | Marketplace | ✅ Working via Playwright (headless Chromium, accessory filter) |
 | eBay AU | Marketplace | ✅ Working via Playwright (warm cookie + .s-card selector + accessory filter) |
-| Mammotion DM AU | Custom | ⛔ Unfixable from any client — their CloudFront edge returns TLS internal_error |
 | Robotic Mowing | Shopify | 🚧 No 3000X listing yet |
+
+### Disabled retailers
+- **LUBA.com.au** (originally the AU exclusive importer) — their authoritative DNS at Cloudflare returns SERVFAIL/REFUSED. Site has been DNS-broken since at least Jan 2026. Mammotion AU (the manufacturer) is the canonical source so we don't need the importer.
+- **Mammotion DM AU** — their CloudFront edge returns TLS `internal_error` to every client tested. Their config is broken; nothing we can do.
 
 ## Pickup checklist
 

@@ -71,34 +71,32 @@ function computeHistoricalBest(history, retailerKey) {
 
 function evaluateAlerts(latest, history) {
   const triggered = [];
-  const floorRetailer = (latest.results || []).find((r) => r.isFloorReference && !r.error);
-  // Only trust the floor for alerts when it's both LIVE (not wayback fallback)
-  // and IN STOCK. Stale or OOS floor is informational only.
-  const floorAuthoritative = floorRetailer && floorRetailer.source !== 'wayback-fallback' && floorRetailer.available !== false;
-  const floor = floorAuthoritative ? floorRetailer.price : null;
-  const floorInformational = floorRetailer?.price ?? null;
+  // Reference price is the manufacturer's official store (Mammotion AU at au.mammotion.com).
+  // If a retailer is selling for less than the manufacturer, that's a real deal.
+  const manufacturer = (latest.results || []).find((r) => r.isOfficial && !r.error && r.price != null);
+  const refPrice = manufacturer?.price ?? null;
 
   for (const r of latest.results || []) {
     if (r.error || r.price == null) continue;
-    if (r.isFloorReference) continue; // floor is the reference, not a candidate
+    if (r.isOfficial) continue; // manufacturer is the reference, not a candidate
     if (r.available === false && r.inventoryPolicy !== 'continue') continue;
     if (r.retailerType === 'amazon' || r.retailerType === 'ebay') continue; // marketplaces noisy, defer
 
     const key = r.id;
 
-    // Rule (b): below LUBA.com.au floor (only when authoritative)
-    if (floor != null && r.price < floor) {
-      const saving = floor - r.price;
-      const pct = (saving / floor) * 100;
+    // Rule (b): below manufacturer (Mammotion AU) price
+    if (refPrice != null && r.price < refPrice) {
+      const saving = refPrice - r.price;
+      const pct = (saving / refPrice) * 100;
       triggered.push({
-        type: 'below-floor',
+        type: 'below-manufacturer',
         retailer: r.name,
         url: r.productUrl,
         currentPrice: r.price,
-        floor,
+        refPrice,
         saving,
         pct,
-        message: `Below LUBA.com.au floor by ${fmtAud(saving)} (${pct.toFixed(1)}%)`,
+        message: `Below Mammotion AU price by ${fmtAud(saving)} (${pct.toFixed(1)}%)`,
       });
     }
 
@@ -124,7 +122,7 @@ function evaluateAlerts(latest, history) {
       }
     }
   }
-  return { triggered, floor, floorInformational, floorAuthoritative: !!floorAuthoritative };
+  return { triggered, refPrice };
 }
 
 function loadAlertState() {
@@ -185,9 +183,9 @@ async function postTelegram(text) {
   return true;
 }
 
-function formatAlertMessage(triggered, floor, latest) {
+function formatAlertMessage(triggered, refPrice, latest) {
   const lines = ['🌱 <b>LUBA 2 AWD 3000X — price alert</b>'];
-  if (floor != null) lines.push(`Importer floor (LUBA.com.au): <b>${fmtAud(floor)}</b>`);
+  if (refPrice != null) lines.push(`Mammotion AU (manufacturer): <b>${fmtAud(refPrice)}</b>`);
   lines.push('');
   for (const t of triggered) {
     lines.push(`• <b>${t.retailer}</b>: <b>${fmtAud(t.currentPrice)}</b>`);
@@ -210,17 +208,16 @@ const history = loadHistory();
 
 console.log(`Snapshot at ${latest.fetchedAt} — ${history.length} historical snapshots`);
 
-const { triggered, floor, floorInformational, floorAuthoritative } = evaluateAlerts(latest, history);
+const { triggered, refPrice } = evaluateAlerts(latest, history);
 
 if (!triggered.length && !FORCE) {
-  const floorMsg = floorAuthoritative ? `floor=${fmtAud(floor)}` : `floor=stale/OOS (${fmtAud(floorInformational)})`;
-  console.log(`No alerts. (${floorMsg}, latest cheapest=${fmtAud(latest.summary?.cheapestMower?.price)})`);
+  console.log(`No alerts. (Mammotion AU=${fmtAud(refPrice)}, latest cheapest=${fmtAud(latest.summary?.cheapestMower?.price)})`);
   process.exit(0);
 }
 
 const message = triggered.length
-  ? formatAlertMessage(triggered, floor, latest)
-  : `🌱 LUBA 2 AWD 3000X — manual snapshot\nCheapest: ${fmtAud(latest.summary?.cheapestMower?.price)}\nFloor: ${fmtAud(floor)}\n${latest.fetchedAt}`;
+  ? formatAlertMessage(triggered, refPrice, latest)
+  : `🌱 LUBA 2 AWD 3000X — manual snapshot\nCheapest: ${fmtAud(latest.summary?.cheapestMower?.price)}\nMammotion AU: ${fmtAud(refPrice)}\n${latest.fetchedAt}`;
 
 console.log('---');
 console.log(message);

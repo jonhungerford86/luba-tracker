@@ -40,19 +40,18 @@
       "notes": "Reseller; same SKU appears on Kogan, Mattblatt, Woolworths Marketplace (likely same price)"
     },
     {
-      "id": "luba-com-au",
-      "name": "LUBA.com.au (Exclusive Importer — PRICE FLOOR)",
+      "id": "_disabled_luba_com_au",
+      "_disabled": true,
+      "name": "LUBA.com.au (DISABLED — importer DNS broken at Cloudflare since Jan 2026)",
       "url": "https://luba.com.au",
-      "shopify": false,
-      "isFloorReference": true,
-      "notes": "Custom WP/WooCommerce — needs HTML scraper. This is the price floor for alerts."
+      "notes": "Removed 2026-04-29 per Jon: Mammotion AU (au.mammotion.com) is the manufacturer/official store and supersedes the importer for our purposes. Re-enable if luba.com.au DNS is ever restored."
     },
     {
-      "id": "mammotion-dm",
-      "name": "Mammotion DM AU",
+      "id": "_disabled_mammotion_dm",
+      "_disabled": true,
+      "name": "Mammotion DM AU (DISABLED — CloudFront TLS broken)",
       "url": "https://www.mammotiondm.com.au",
-      "shopify": false,
-      "notes": "Custom site — needs scraper"
+      "notes": "Removed 2026-04-29: their CloudFront edge returns TLS internal_error to every client. Mammotion AU (au.mammotion.com, the manufacturer's official store) is the canonical Mammotion source."
     }
   ],
   "marketplaces": [
@@ -73,7 +72,8 @@
   ],
   "alertRules": {
     "minDropFromBest": 10,
-    "useFloorReference": "luba-com-au",
+    "_useFloorReference": "DISABLED — LUBA.com.au removed 2026-04-29. Mammotion AU (au.mammotion.com) is the official manufacturer store; if it goes on sale, that IS the floor.",
+    "manufacturerStoreId": "mammotion-au",
     "telegramTopic": -1003737519088,
     "telegramThread": 53
   },
