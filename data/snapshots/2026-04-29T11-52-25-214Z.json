@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-04-29T11:57:32.569Z",
+  "fetchedAt": "2026-04-29T11:52:25.214Z",
   "summary": {
     "ok": 6,
     "failed": 2,
@@ -25,7 +25,7 @@
       "isOfficial": true,
       "isAuthorisedDealer": false,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:57:30.152Z",
+      "fetchedAt": "2026-04-29T11:52:22.877Z",
       "title": "MAMMOTION LUBA 2 AWD",
       "variantTitle": "LUBA 2 AWD 3000X | 3000㎡",
       "variantId": 50514583486769,
@@ -61,7 +61,7 @@
       "isOfficial": false,
       "isAuthorisedDealer": true,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:57:30.618Z",
+      "fetchedAt": "2026-04-29T11:52:23.294Z",
       "title": "Mammotion LUBA 2 AWD 3000X | 3000㎡ - Order from RMA",
       "variantTitle": "Default Title",
       "variantId": 45049866715236,
@@ -91,7 +91,7 @@
       "isOfficial": false,
       "isAuthorisedDealer": true,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:57:31.078Z",
+      "fetchedAt": "2026-04-29T11:52:23.755Z",
       "title": "Mammotion LUBA 2 AWD 3000X Garage & Mow Kit",
       "variantTitle": "Default Title",
       "variantId": 45093454119012,
@@ -121,7 +121,7 @@
       "isOfficial": false,
       "isAuthorisedDealer": true,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:57:31.484Z",
+      "fetchedAt": "2026-04-29T11:52:24.177Z",
       "title": "MAMMOTION LUBA 2 AWD 3000X: Perimeter Wire Free Robot Lawn Mower",
       "variantTitle": "Default Title",
       "variantId": 52384331727008,
@@ -150,7 +150,7 @@
       "isOfficial": false,
       "isFloorReference": true,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:57:31.937Z",
+      "fetchedAt": "2026-04-29T11:52:24.604Z",
       "error": "fetch failed: fetch failed"
     },
     {
@@ -161,7 +161,7 @@
       "productUrl": "https://www.mammotiondm.com.au/products/luba-2-awd-3000x",
       "isBundle": false,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:57:32.003Z",
+      "fetchedAt": "2026-04-29T11:52:24.662Z",
       "error": "fetch failed: fetch failed"
     },
     {
@@ -171,7 +171,7 @@
       "productUrl": "https://www.ebay.com.au/sch/i.html?_nkw=Mammotion+LUBA+2+AWD+3000X&_sop=15",
       "url": "https://www.ebay.com.au",
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:57:19.110Z",
+      "fetchedAt": "2026-04-29T11:49:53.177Z",
       "title": "Mammotion LUBA 2 AWD 3000X (eBay AU search)",
       "variantTitle": "1 mower listing",
       "price": 5576.99,
@@ -195,7 +195,7 @@
       "productUrl": "https://www.amazon.com.au/s?k=Mammotion+LUBA+2+AWD+3000X",
       "url": "https://www.amazon.com.au",
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:57:27.311Z",
+      "fetchedAt": "2026-04-29T11:50:01.463Z",
       "title": "Mammotion LUBA 2 AWD 3000X (Amazon AU search)",
       "variantTitle": "1 mower listing",
       "price": 4199,
