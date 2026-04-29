@@ -81,9 +81,17 @@ function pickPreferredVariant(product) {
 
 async function snapshotShopifyProduct(retailer, handle) {
   const productUrl = `${retailer.url}/products/${handle}`;
+  // For multi-handle retailers, use a clean variant label rather than the URL handle.
+  let nameSuffix = '';
+  if (retailer.productHandles?.length > 1) {
+    const guessed = /garage|kit|bundle|combo|ultimate/i.test(handle)
+      ? ' — Garage Kit bundle'
+      : ' — mower only';
+    nameSuffix = guessed;
+  }
   const result = {
     id: `${retailer.id}:${handle}`,
-    name: retailer.name + (retailer.productHandles?.length > 1 ? ` (${handle})` : ''),
+    name: retailer.name + nameSuffix,
     retailerType: 'shopify',
     url: retailer.url,
     productUrl,

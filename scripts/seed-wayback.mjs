@@ -259,7 +259,7 @@ async function seedRetailer(retailer, handle) {
       target,
       result: {
         id: `${retailer.id}:${handle}`,
-        name: retailer.name + (retailer.productHandles?.length > 1 ? ` (${handle})` : ''),
+        name: retailer.name + (retailer.productHandles?.length > 1 ? (/garage|kit|bundle|combo|ultimate/i.test(handle) ? ' — Garage Kit bundle' : ' — mower only') : ''),
         retailerType: 'shopify',
         url: retailer.url,
         productUrl: target,

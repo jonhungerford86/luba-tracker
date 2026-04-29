@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-04-29T12:06:07.287Z",
+  "builtAt": "2026-04-29T12:10:40.202Z",
   "retailerCount": 7,
   "series": {
     "mammotion-au:luba-2-awd-robot-lawn-mower": [
@@ -132,7 +132,7 @@
         "compareAt": null,
         "available": true,
         "source": "live",
-        "name": "Robot Mowers Australia (mammotion-luba-2-awd-3000x-3000-order-from-rma)",
+        "name": "Robot Mowers Australia — mower only",
         "productUrl": "https://robotmowersaustralia.com.au/products/mammotion-luba-2-awd-3000x-3000-order-from-rma"
       }
     ],
@@ -143,7 +143,7 @@
         "compareAt": null,
         "available": true,
         "source": "live",
-        "name": "Robot Mowers Australia (mammotion-luba-2-awd-3000x-garage-mow-kit)",
+        "name": "Robot Mowers Australia — Garage Kit bundle",
         "productUrl": "https://robotmowersaustralia.com.au/products/mammotion-luba-2-awd-3000x-garage-mow-kit"
       }
     ],
