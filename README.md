@@ -16,13 +16,12 @@ Daily snapshots of the Mammotion LUBA 2 AWD 3000X across all known Australian re
 
 ```
 luba-tracker/
-├── web/                 ← GitHub Pages root
-│   ├── index.html       ← dashboard
-│   └── data/
-│       ├── latest.json  ← what the dashboard reads
-│       └── snapshots/   ← one file per run, timestamped
+├── index.html           ← GitHub Pages dashboard (served from repo root)
+├── data/
+│   ├── latest.json      ← what the dashboard reads
+│   └── snapshots/       ← one file per run, timestamped
 ├── scripts/
-│   └── snapshot.mjs     ← run once → writes web/data/{latest.json, snapshots/<ts>.json}
+│   └── snapshot.mjs     ← run once → writes data/{latest.json, snapshots/<ts>.json}
 ├── retailers.json       ← retailer + alert config
 └── README.md
 ```
@@ -39,7 +38,7 @@ node scripts/snapshot.mjs --dry      # prints only, no persist
 
 Runs on the integration VM at 06:00 AEST:
 1. `node scripts/snapshot.mjs`
-2. `git add web/data && git commit -m "snapshot $(date)"`
+2. `git add data && git commit -m "snapshot $(date)"`
 3. `git push` → GitHub Pages rebuilds automatically
 4. Diff against previous snapshot → if alert rule triggers → POST to Telegram
 

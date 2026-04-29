@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-04-29T11:22:27.628Z",
+  "fetchedAt": "2026-04-29T11:24:07.328Z",
   "summary": {
     "ok": 3,
     "failed": 4,
@@ -25,7 +25,7 @@
       "isOfficial": true,
       "isAuthorisedDealer": false,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:22:24.816Z",
+      "fetchedAt": "2026-04-29T11:24:04.521Z",
       "title": "MAMMOTION LUBA 2 AWD",
       "variantTitle": "LUBA 2 AWD 3000X | 3000㎡",
       "variantId": 50514583486769,
@@ -61,7 +61,7 @@
       "isOfficial": false,
       "isAuthorisedDealer": true,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:22:25.240Z",
+      "fetchedAt": "2026-04-29T11:24:04.983Z",
       "title": "Mammotion LUBA 2 AWD 3000X | 3000㎡ - Order from RMA",
       "variantTitle": "Default Title",
       "variantId": 45049866715236,
@@ -91,7 +91,7 @@
       "isOfficial": false,
       "isAuthorisedDealer": true,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:22:25.716Z",
+      "fetchedAt": "2026-04-29T11:24:05.403Z",
       "title": "Mammotion LUBA 2 AWD 3000X Garage & Mow Kit",
       "variantTitle": "Default Title",
       "variantId": 45093454119012,
@@ -120,7 +120,7 @@
       "isOfficial": false,
       "isFloorReference": true,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:22:26.145Z",
+      "fetchedAt": "2026-04-29T11:24:05.815Z",
       "error": "fetch failed: fetch failed"
     },
     {
@@ -131,7 +131,7 @@
       "productUrl": "https://www.mammotiondm.com.au/products/luba-2-awd-3000x",
       "isBundle": false,
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:22:26.210Z",
+      "fetchedAt": "2026-04-29T11:24:05.878Z",
       "error": "fetch failed: fetch failed"
     },
     {
@@ -141,7 +141,7 @@
       "url": "https://www.amazon.com.au",
       "productUrl": "https://www.amazon.com.au/s?k=Mammotion+LUBA+2+AWD+3000X",
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:22:26.747Z",
+      "fetchedAt": "2026-04-29T11:24:06.439Z",
       "error": "no prices parsed"
     },
     {
@@ -151,7 +151,7 @@
       "url": "https://www.ebay.com.au",
       "productUrl": "https://www.ebay.com.au/sch/i.html?_nkw=Mammotion+LUBA+2+AWD+3000X&_sop=15",
       "currency": "AUD",
-      "fetchedAt": "2026-04-29T11:22:27.523Z",
+      "fetchedAt": "2026-04-29T11:24:07.239Z",
       "error": "HTTP 403"
     }
   ]

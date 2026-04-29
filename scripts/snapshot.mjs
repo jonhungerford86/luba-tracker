@@ -26,8 +26,8 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
-const SNAPSHOT_DIR = path.join(PROJECT_ROOT, 'web', 'data', 'snapshots');
-const LATEST_PATH = path.join(PROJECT_ROOT, 'web', 'data', 'latest.json');
+const SNAPSHOT_DIR = path.join(PROJECT_ROOT, 'data', 'snapshots');
+const LATEST_PATH = path.join(PROJECT_ROOT, 'data', 'latest.json');
 
 const args = new Set(process.argv.slice(2));
 const DRY = args.has('--dry');
