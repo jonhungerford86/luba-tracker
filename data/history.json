@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-05-12T20:01:52.663Z",
+  "builtAt": "2026-05-13T20:01:17.791Z",
   "retailerCount": 6,
   "series": {
     "mammotion-au:luba-2-awd-robot-lawn-mower": [
@@ -170,6 +170,15 @@
         "price": 4199,
         "compareAt": null,
         "available": true,
+        "source": "live",
+        "name": "Mammotion AU (Official)",
+        "productUrl": "https://au.mammotion.com/products/luba-2-awd-robot-lawn-mower"
+      },
+      {
+        "date": "2026-05-13",
+        "price": 4199,
+        "compareAt": null,
+        "available": null,
         "source": "live",
         "name": "Mammotion AU (Official)",
         "productUrl": "https://au.mammotion.com/products/luba-2-awd-robot-lawn-mower"
@@ -726,6 +735,15 @@
       },
       {
         "date": "2026-05-12",
+        "price": 4199,
+        "compareAt": null,
+        "available": true,
+        "source": "live",
+        "name": "Amazon AU",
+        "productUrl": "https://www.amazon.com.au/s?k=Mammotion+LUBA+2+AWD+3000X"
+      },
+      {
+        "date": "2026-05-13",
         "price": 4199,
         "compareAt": null,
         "available": true,
