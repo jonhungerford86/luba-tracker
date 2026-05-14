@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-13T20:01:15.239Z",
+  "fetchedAt": "2026-05-14T20:02:32.724Z",
   "results": [
     {
       "id": "ebay-au",
@@ -8,7 +8,7 @@
       "productUrl": "https://www.ebay.com.au/sch/i.html?_nkw=Mammotion+LUBA+2+AWD+3000X&_sop=15",
       "url": "https://www.ebay.com.au",
       "currency": "AUD",
-      "fetchedAt": "2026-05-13T20:01:04.885Z",
+      "fetchedAt": "2026-05-14T20:02:18.881Z",
       "error": "no qualifying mower listings (after accessory filter)"
     },
     {
@@ -18,23 +18,8 @@
       "productUrl": "https://www.amazon.com.au/s?k=Mammotion+LUBA+2+AWD+3000X",
       "url": "https://www.amazon.com.au",
       "currency": "AUD",
-      "fetchedAt": "2026-05-13T20:01:12.617Z",
-      "title": "Mammotion LUBA 2 AWD 3000X (Amazon AU search)",
-      "variantTitle": "1 mower listing",
-      "price": 4199,
-      "priceMin": 4199,
-      "priceMax": 4199,
-      "priceMedian": 4199,
-      "listings": 1,
-      "available": true,
-      "topListings": [
-        {
-          "title": "Mammotion\nLUBA 2 AWD 3000X Robot Lawn Mower with 4G, Reception 3000㎡, Max. 3600㎡, All-Wheel-Drive fo",
-          "price": 4199,
-          "url": "",
-          "asin": "B0F4CW1NRX"
-        }
-      ]
+      "fetchedAt": "2026-05-14T20:02:29.145Z",
+      "error": "no qualifying mower listings (after accessory filter)"
     }
   ]
 }
