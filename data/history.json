@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-05-19T20:01:40.941Z",
+  "builtAt": "2026-05-20T20:01:35.801Z",
   "retailerCount": 6,
   "series": {
     "mammotion-au:luba-2-awd-robot-lawn-mower": [
@@ -236,6 +236,15 @@
         "source": "live",
         "name": "Mammotion AU (Official)",
         "productUrl": "https://au.mammotion.com/products/luba-2-awd-robot-lawn-mower"
+      },
+      {
+        "date": "2026-05-20",
+        "price": 4199,
+        "compareAt": null,
+        "available": false,
+        "source": "live",
+        "name": "Mammotion AU (Official)",
+        "productUrl": "https://au.mammotion.com/products/luba-2-awd-robot-lawn-mower"
       }
     ],
     "ople:mammotion-luba-2-awd-3000x-perimeter-wire-free-robot-lawn-mower": [
@@ -430,6 +439,15 @@
       },
       {
         "date": "2026-05-19",
+        "price": 4399,
+        "compareAt": 4599,
+        "available": true,
+        "source": "live",
+        "name": "Ople Appliance",
+        "productUrl": "https://ople.com.au/products/mammotion-luba-2-awd-3000x-perimeter-wire-free-robot-lawn-mower"
+      },
+      {
+        "date": "2026-05-20",
         "price": 4399,
         "compareAt": 4599,
         "available": true,
@@ -758,6 +776,15 @@
       },
       {
         "date": "2026-05-19",
+        "price": 4560,
+        "compareAt": null,
+        "available": true,
+        "source": "live",
+        "name": "Robot Mowers Australia — Garage Kit bundle",
+        "productUrl": "https://robotmowersaustralia.com.au/products/mammotion-luba-2-awd-3000x-garage-mow-kit"
+      },
+      {
+        "date": "2026-05-20",
         "price": 4560,
         "compareAt": null,
         "available": true,
