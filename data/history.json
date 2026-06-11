@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-06-10T20:00:17.051Z",
+  "builtAt": "2026-06-11T20:00:20.154Z",
   "retailerCount": 6,
   "series": {
     "mammotion-au:luba-2-awd-robot-lawn-mower": [
@@ -425,6 +425,15 @@
         "source": "live",
         "name": "Mammotion AU (Official)",
         "productUrl": "https://au.mammotion.com/products/luba-2-awd-robot-lawn-mower"
+      },
+      {
+        "date": "2026-06-11",
+        "price": 4199,
+        "compareAt": null,
+        "available": false,
+        "source": "live",
+        "name": "Mammotion AU (Official)",
+        "productUrl": "https://au.mammotion.com/products/luba-2-awd-robot-lawn-mower"
       }
     ],
     "ople:mammotion-luba-2-awd-3000x-perimeter-wire-free-robot-lawn-mower": [
@@ -808,6 +817,15 @@
       },
       {
         "date": "2026-06-10",
+        "price": 4399,
+        "compareAt": 4599,
+        "available": true,
+        "source": "live",
+        "name": "Ople Appliance",
+        "productUrl": "https://ople.com.au/products/mammotion-luba-2-awd-3000x-perimeter-wire-free-robot-lawn-mower"
+      },
+      {
+        "date": "2026-06-11",
         "price": 4399,
         "compareAt": 4599,
         "available": true,
@@ -1331,6 +1349,15 @@
         "source": "live",
         "name": "Robot Mowers Australia — Garage Kit bundle",
         "productUrl": "https://robotmowersaustralia.com.au/products/mammotion-luba-2-awd-3000x-garage-mow-kit"
+      },
+      {
+        "date": "2026-06-11",
+        "price": 4560,
+        "compareAt": null,
+        "available": true,
+        "source": "live",
+        "name": "Robot Mowers Australia — Garage Kit bundle",
+        "productUrl": "https://robotmowersaustralia.com.au/products/mammotion-luba-2-awd-3000x-garage-mow-kit"
       }
     ],
     "ebay-au": [
@@ -1373,6 +1400,15 @@
       {
         "date": "2026-06-10",
         "price": 3129.43,
+        "compareAt": null,
+        "available": true,
+        "source": "live",
+        "name": "eBay AU",
+        "productUrl": "https://www.ebay.com.au/sch/i.html?_nkw=Mammotion+LUBA+2+AWD+3000X&_sop=15"
+      },
+      {
+        "date": "2026-06-11",
+        "price": 3143.29,
         "compareAt": null,
         "available": true,
         "source": "live",
