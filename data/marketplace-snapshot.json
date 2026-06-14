@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-06-13T20:00:14.223Z",
+  "fetchedAt": "2026-06-14T20:00:14.803Z",
   "results": [
     {
       "id": "ebay-au",
@@ -8,7 +8,7 @@
       "productUrl": "https://www.ebay.com.au/sch/i.html?_nkw=Mammotion+LUBA+2+AWD+3000X&_sop=15",
       "url": "https://www.ebay.com.au",
       "currency": "AUD",
-      "fetchedAt": "2026-06-13T20:00:03.733Z",
+      "fetchedAt": "2026-06-14T20:00:04.429Z",
       "title": "Mammotion LUBA 2 AWD 3000X (eBay AU search)",
       "variantTitle": "1 mower listing",
       "price": 3121.88,
@@ -32,7 +32,7 @@
       "productUrl": "https://www.amazon.com.au/s?k=Mammotion+LUBA+2+AWD+3000X",
       "url": "https://www.amazon.com.au",
       "currency": "AUD",
-      "fetchedAt": "2026-06-13T20:00:11.666Z",
+      "fetchedAt": "2026-06-14T20:00:12.027Z",
       "error": "no qualifying mower listings (after accessory filter)"
     }
   ]
