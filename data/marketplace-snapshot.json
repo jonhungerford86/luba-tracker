@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-07-01T20:00:19.052Z",
+  "fetchedAt": "2026-07-02T20:00:20.036Z",
   "results": [
     {
       "id": "ebay-au",
@@ -8,24 +8,24 @@
       "productUrl": "https://www.ebay.com.au/sch/i.html?_nkw=Mammotion+LUBA+2+AWD+3000X&_sop=15",
       "url": "https://www.ebay.com.au",
       "currency": "AUD",
-      "fetchedAt": "2026-07-01T20:00:08.550Z",
+      "fetchedAt": "2026-07-02T20:00:08.514Z",
       "title": "Mammotion LUBA 2 AWD 3000X (eBay AU search)",
       "variantTitle": "2 mower listings",
-      "price": 3100.14,
-      "priceMin": 3100.14,
-      "priceMax": 3179.64,
-      "priceMedian": 3179.64,
+      "price": 3111.84,
+      "priceMin": 3111.84,
+      "priceMax": 3191.63,
+      "priceMedian": 3191.63,
       "listings": 2,
       "available": true,
       "topListings": [
         {
           "title": "Mammotion LUBA 2 AWD 3000X Robot Lawn Mower 0.75 Acre 80% Slope Cut 1.0\"-2.7\"",
-          "price": 3100.14,
+          "price": 3111.84,
           "url": "https://www.ebay.com.au/itm/168493971784"
         },
         {
           "title": "Mammotion LUBA 2 AWD 3000X Robot Lawn Mower 0.75 Acre 80% Slope Cut 1.0\"-2.7\"",
-          "price": 3179.64,
+          "price": 3191.63,
           "url": "https://www.ebay.com.au/itm/168440962351"
         }
       ]
@@ -37,7 +37,7 @@
       "productUrl": "https://www.amazon.com.au/s?k=Mammotion+LUBA+2+AWD+3000X",
       "url": "https://www.amazon.com.au",
       "currency": "AUD",
-      "fetchedAt": "2026-07-01T20:00:16.370Z",
+      "fetchedAt": "2026-07-02T20:00:17.064Z",
       "error": "no qualifying mower listings (after accessory filter)"
     }
   ]
