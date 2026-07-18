@@ -1,5 +1,5 @@
 {
-  "builtAt": "2026-07-17T20:00:36.049Z",
+  "builtAt": "2026-07-18T20:00:20.100Z",
   "retailerCount": 6,
   "series": {
     "mammotion-au:luba-2-awd-robot-lawn-mower": [
@@ -1462,6 +1462,15 @@
         "source": "live",
         "name": "Ople Appliance",
         "productUrl": "https://ople.com.au/products/mammotion-luba-2-awd-3000x-perimeter-wire-free-robot-lawn-mower"
+      },
+      {
+        "date": "2026-07-18",
+        "price": 4399,
+        "compareAt": 4599,
+        "available": null,
+        "source": "live",
+        "name": "Ople Appliance",
+        "productUrl": "https://ople.com.au/products/mammotion-luba-2-awd-3000x-perimeter-wire-free-robot-lawn-mower"
       }
     ],
     "robot-mowers-au:mammotion-luba-2-awd-3000x-3000-order-from-rma": [
@@ -2597,6 +2606,15 @@
       {
         "date": "2026-07-17",
         "price": 3066.02,
+        "compareAt": null,
+        "available": true,
+        "source": "live",
+        "name": "eBay AU",
+        "productUrl": "https://www.ebay.com.au/sch/i.html?_nkw=Mammotion+LUBA+2+AWD+3000X&_sop=15"
+      },
+      {
+        "date": "2026-07-18",
+        "price": 3071.29,
         "compareAt": null,
         "available": true,
         "source": "live",
